@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhanu Sohan Pingali</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        card: 'hsl(var(--card))',
+                        'card-foreground': 'hsl(var(--card-foreground))',
+                        popover: 'hsl(var(--popover))',
+                        'popover-foreground': 'hsl(var(--popover-foreground))',
+                        primary: 'hsl(var(--primary))',
+                        'primary-foreground': 'hsl(var(--primary-foreground))',
+                        secondary: 'hsl(var(--secondary))',
+                        'secondary-foreground': 'hsl(var(--secondary-foreground))',
+                        muted: 'hsl(var(--muted))',
+                        'muted-foreground': 'hsl(var(--muted-foreground))',
+                        accent: 'hsl(var(--accent))',
+                        'accent-foreground': 'hsl(var(--accent-foreground))',
+                        destructive: 'hsl(var(--destructive))',
+                        'destructive-foreground': 'hsl(var(--destructive-foreground))',
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 0 0% 3.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 0 0% 3.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 0 0% 3.9%;
+            --primary: 0 0% 9%;
+            --primary-foreground: 0 0% 98%;
+            --secondary: 0 0% 96.1%;
+            --secondary-foreground: 0 0% 9%;
+            --muted: 0 0% 96.1%;
+            --muted-foreground: 0 0% 45.1%;
+            --accent: 0 0% 96.1%;
+            --accent-foreground: 0 0% 9%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 0 0% 14.9%;
+            --input: 0 0% 14.9%;
+            --ring: 0 0% 3.9%;
+            --radius: 0.5rem;
+        }
+
+        .dark {
+            --background: 0 0% 3.9%;
+            --foreground: 0 0% 98%;
+            --card: 0 0% 3.9%;
+            --card-foreground: 0 0% 98%;
+            --popover: 0 0% 3.9%;
+            --popover-foreground: 0 0% 98%;
+            --primary: 0 0% 98%;
+            --primary-foreground: 0 0% 9%;
+            --secondary: 0 0% 14.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 0 0% 14.9%;
+            --muted-foreground: 0 0% 63.9%;
+            --accent: 0 0% 14.9%;
+            --accent-foreground: 0 0% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 0 0% 85.1%;
+            --input: 0 0% 14.9%;
+            --ring: 0 0% 83.1%;
+        }
+
+        .hover-underline::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: currentColor;
+            transition: width 0.3s ease-out;
+        }
+
+        .hover-underline:hover::after {
+            width: 100%;
+        }
+    </style>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-background text-foreground font-sans transition-colors duration-300">
+
+    <!-- Dark Mode Toggle -->
+    <div class="fixed top-4 right-4 z-50 flex items-center space-x-3 bg-card border-2 border-border rounded-full px-4 py-2 shadow-lg">
+        <i data-lucide="sun" class="h-4 w-4"></i>
+        <label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="dark-mode-toggle" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+        </label>
+        <i data-lucide="moon" class="h-4 w-4"></i>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b-2 border-border z-40 transition-colors duration-300">
+        <div class="max-w-4xl mx-auto px-6 py-4">
+            <div class="flex justify-center space-x-8">
+                <button onclick="scrollToSection('about')" class="text-sm font-medium hover-underline relative capitalize">About</button>
+                <button onclick="scrollToSection('experience')" class="text-sm font-medium hover-underline relative capitalize">Experience</button>
+                <button onclick="scrollToSection('projects')" class="text-sm font-medium hover-underline relative capitalize">Projects</button>
+                <button onclick="scrollToSection('skills')" class="text-sm font-medium hover-underline relative capitalize">Skills</button>
+                <button onclick="scrollToSection('education')" class="text-sm font-medium hover-underline relative capitalize">Education</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-6 pt-20">
+        <!-- Hero Section -->
+        <section class="py-16 text-center">
+            <h1 class="text-5xl md:text-6xl font-bold mb-6 text-foreground">
+                Bhanu Sohan Pingali
+            </h1>
+            <p class="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+                B.S. in CS @ UMass Amherst — Building agentic AI pipelines & real‑time systems.
+            </p>
+            
+            <div class="flex justify-center space-x-6 mb-8">
+                <a href="https://linkedin.com/in/bhanupingali" target="_blank" rel="noopener noreferrer" class="p-3 rounded-full border-2 border-border hover:scale-105 transition-transform hover:bg-accent" aria-label="LinkedIn Profile">
+                    <i data-lucide="linkedin" class="h-6 w-6"></i>
+                </a>
+                <a href="https://github.com/bhanupingali" target="_blank" rel="noopener noreferrer" class="p-3 rounded-full border-2 border-border hover:scale-105 transition-transform hover:bg-accent" aria-label="GitHub Profile">
+                    <i data-lucide="github" class="h-6 w-6"></i>
+                </a>
+            </div>
+
+            <button onclick="window.open('/resume.pdf', '_blank')" class="inline-flex items-center justify-center px-8 py-4 bg-primary text-primary-foreground rounded-md text-lg font-medium hover:scale-105 transition-transform">
+                <i data-lucide="download" class="h-4 w-4 mr-2"></i>
+                Download Résumé
+            </button>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-16">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-8">About</h2>
+                <div class="w-24 h-0.5 bg-foreground mx-auto mb-8"></div>
+                <p class="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                    I'm a Computer Science major at UMass Amherst (GPA 3.97) with hands‑on experience in agentic AI SIEM workflows, RAG pipelines, and real‑time data systems. I love turning research insights into production‑ready tools.
+                </p>
+            </div>
+        </section>
+
+        <!-- Experience Section -->
+        <section id="experience" class="py-16">
+            <h2 class="text-4xl font-bold text-center mb-16">Experience</h2>
+            <div class="space-y-8">
+                <div class="p-8 border-2 border-border rounded-lg hover:shadow-lg transition-shadow">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-foreground">Software Engineering Intern</h3>
+                            <p class="text-lg text-muted-foreground font-medium">BluSapphire Cyber Systems</p>
+                        </div>
+                        <div class="text-right text-sm text-muted-foreground">
+                            <p>June 2025 – Aug 2025</p>
+                            <p>Hyderabad, India</p>
+                        </div>
+                    </div>
+                    <ul class="space-y-3">
+                        <li class="flex items-start space-x-3">
+                            <i data-lucide="briefcase" class="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0"></i>
+                            <span class="text-muted-foreground">Agentic log‑parsing pipeline for data engineering</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-lucide="briefcase" class="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0"></i>
+                            <span class="text-muted-foreground">Multi‑agent AI workflow generating VRL configs</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-lucide="briefcase" class="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0"></i>
+                            <span class="text-muted-foreground">Agentic Swarm with AutoGen & function‑calling loops</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-lucide="briefcase" class="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0"></i>
+                            <span class="text-muted-foreground">RAG pipeline with ChromaDB & Grok patterns</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-lucide="briefcase" class="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0"></i>
+                            <span class="text-muted-foreground">Autonomous tester loop executing vector.dev via subprocess</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="p-8 border-2 border-border rounded-lg hover:shadow-lg transition-shadow">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-foreground">Undergraduate Researcher</h3>
+                            <p class="text-lg text-muted-foreground font-medium">CIIR, UMass Amherst</p>
+                        </div>
+                        <div class="text-right text-sm text-muted-foreground">
+                            <p>Nov 2024 – May 2025</p>
+                            <p>Amherst, MA</p>
+                        </div>
+                    </div>
+                    <ul class="space-y-3">
+                        <li class="flex items-start space-x-3">
+                            <i data-lucide="brain" class="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0"></i>
+                            <span class="text-muted-foreground">Surveyed 25+ papers on LLM creativity & memorization</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-lucide="brain" class="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0"></i>
+                            <span class="text-muted-foreground">Built QAE testing pipeline with synthetic question generation</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-lucide="brain" class="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0"></i>
+                            <span class="text-muted-foreground">Developed 7+ workflows (Zero‑Shot, COT, Few‑Shot) for AMC‑12 probability</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="p-8 border-2 border-border rounded-lg hover:shadow-lg transition-shadow">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-foreground">BioNLP Lab Research Assistant</h3>
+                            <p class="text-lg text-muted-foreground font-medium">UMass Amherst</p>
+                        </div>
+                        <div class="text-right text-sm text-muted-foreground">
+                            <p>Dec 2024 – Jan 2025</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <i data-lucide="code" class="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0"></i>
+                        <span class="text-muted-foreground">Reviewed 5+ papers on clinical‑domain fine‑tuning of LLMs.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects" class="py-16">
+            <h2 class="text-4xl font-bold text-center mb-16">Selected Projects</h2>
+            <div class="grid gap-8">
+                <div class="p-8 border-2 border-border rounded-lg hover:shadow-lg transition-all hover:scale-105">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-2xl font-bold text-foreground">TradeBooks</h3>
+                        <i data-lucide="external-link" class="h-5 w-5 text-muted-foreground hover:text-foreground cursor-pointer"></i>
+                    </div>
+                    <p class="text-muted-foreground mb-4 leading-relaxed">Real‑time Kafka/ZooKeeper trading simulation with FastAPI/JavaScript dashboard</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Kafka</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">FastAPI</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">JavaScript</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">ZooKeeper</span>
+                    </div>
+                </div>
+                <div class="p-8 border-2 border-border rounded-lg hover:shadow-lg transition-all hover:scale-105">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-2xl font-bold text-foreground">CyberDefender</h3>
+                        <i data-lucide="external-link" class="h-5 w-5 text-muted-foreground hover:text-foreground cursor-pointer"></i>
+                    </div>
+                    <p class="text-muted-foreground mb-4 leading-relaxed">Intrusion detection system using Neural Networks, XGBoost, and Isolation Forest</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Python</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">XGBoost</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">PyTorch</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Scikit-learn</span>
+                    </div>
+                </div>
+                <div class="p-8 border-2 border-border rounded-lg hover:shadow-lg transition-all hover:scale-105">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-2xl font-bold text-foreground">UMass Eats</h3>
+                        <i data-lucide="external-link" class="h-5 w-5 text-muted-foreground hover:text-foreground cursor-pointer"></i>
+                    </div>
+                    <p class="text-muted-foreground mb-4 leading-relaxed">RAG chatbot powered by OpenAI Assistants API with Streamlit interface</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">OpenAI</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Streamlit</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Python</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">RAG</span>
+                    </div>
+                </div>
+                <div class="p-8 border-2 border-border rounded-lg hover:shadow-lg transition-all hover:scale-105">
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-2xl font-bold text-foreground">FinEdge</h3>
+                        <i data-lucide="external-link" class="h-5 w-5 text-muted-foreground hover:text-foreground cursor-pointer"></i>
+                    </div>
+                    <p class="text-muted-foreground mb-4 leading-relaxed">Options pricing using Black‑Scholes and Monte Carlo methods with Seaborn visualizations</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Python</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">NumPy</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Seaborn</span>
+                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Monte Carlo</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section id="skills" class="py-16">
+            <h2 class="text-4xl font-bold text-center mb-16">Technical Skills</h2>
+            <div class="space-y-8">
+                <div class="p-6 border-2 border-border rounded-lg">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <i data-lucide="code" class="h-5 w-5"></i>
+                        <h3 class="text-xl font-bold text-foreground">Languages & Frameworks</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Python</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Java</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">JavaScript</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">C++</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">TypeScript</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Next.js</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">FastAPI</span>
+                    </div>
+                </div>
+                <div class="p-6 border-2 border-border rounded-lg">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <i data-lucide="database" class="h-5 w-5"></i>
+                        <h3 class="text-xl font-bold text-foreground">Infrastructure & Databases</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">MongoDB</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">PostgreSQL</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">AWS</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Supabase</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Kafka</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">ZooKeeper</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Redis</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Vector.dev</span>
+                    </div>
+                </div>
+                <div class="p-6 border-2 border-border rounded-lg">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <i data-lucide="brain" class="h-5 w-5"></i>
+                        <h3 class="text-xl font-bold text-foreground">ML & AI</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">NumPy</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Pandas</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Scikit-learn</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">PyTorch</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">ChromaDB</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">FAISS</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">AutoGen</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">LangChain</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">LangGraph</span>
+                    </div>
+                </div>
+                <div class="p-6 border-2 border-border rounded-lg">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <i data-lucide="git-branch" class="h-5 w-5"></i>
+                        <h3 class="text-xl font-bold text-foreground">Version Control & CI/CD</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Git</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">GitHub</span>
+                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">GitHub Actions</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Education & Awards Section -->
+        <section id="education" class="py-16">
+            <h2 class="text-4xl font-bold text-center mb-16">Education & Awards</h2>
+            <div class="p-8 border-2 border-border rounded-lg">
+                <div class="space-y-6">
+                    <div class="flex items-start space-x-4">
+                        <i data-lucide="graduation-cap" class="h-6 w-6 text-muted-foreground mt-1"></i>
+                        <div>
+                            <h3 class="text-2xl font-bold text-foreground">University of Massachusetts Amherst</h3>
+                            <p class="text-lg text-muted-foreground">B.S. Computer Science • GPA 3.97 • May 2028</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-border pt-6">
+                        <div class="flex items-start space-x-4">
+                            <i data-lucide="award" class="h-6 w-6 text-muted-foreground mt-1"></i>
+                            <div>
+                                <h4 class="text-xl font-bold text-foreground mb-2">Awards & Recognition</h4>
+                                <ul class="space-y-2 text-muted-foreground">
+                                    <li>• Chancellor's Award ($64k scholarship)</li>
+                                    <li>• Dean's List (Fall 2024, Spring 2025)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-12 border-t-2 border-border">
+            <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-6">
+                    <a href="mailto:bpingali@umass.edu" class="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors hover-underline relative">
+                        <i data-lucide="mail" class="h-4 w-4"></i>
+                        <span>bpingali@umass.edu</span>
+                    </a>
+                    <a href="tel:+1234567890" class="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors hover-underline relative">
+                        <i data-lucide="phone" class="h-4 w-4"></i>
+                        <span>(123) 456-7890</span>
+                    </a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="https://linkedin.com/in/bhanupingali" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
+                        <i data-lucide="linkedin" class="h-5 w-5"></i>
+                    </a>
+                    <a href="https://github.com/bhanupingali" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
+                        <i data-lucide="github" class="h-5 w-5"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8 text-sm text-muted-foreground">
+                © 2025 Bhanu Sohan Pingali
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            document.documentElement.classList.add('dark');
+            darkModeToggle.checked = true;
+        } else {
+            document.documentElement.classList.remove('dark');
+            darkModeToggle.checked = false;
+        }
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            element?.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
