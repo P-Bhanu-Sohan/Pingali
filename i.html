@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-Frequency Trading System Architecture</title>
+    <style>
+        /* 1. GLOBAL STYLES & FINANCE THEME */
+        :root {
+            --bg-dark: #0a0e14;
+            --bg-medium: #111827;
+            --bg-light: #1f2937;
+            --border-color: #374151;
+            --text-primary: #e5e7eb;
+            --text-secondary: #9ca3b9;
+            --gold-glow: #FFD700;
+            --gold-text: #FFD700;
+            --green-text: #4ade80;
+            --red-text: #f87171;
+            --cyan-text: #22d3ee;
+            --blue-text: #60a5fa;
+            --purple-text: #a855f7;
+            --anim-duration: 0.5s;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a202c 100%);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        .container { width: 100%; max-width: 1200px; }
+
+        /* 2. HEADER & CONTROLS */
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 1rem; margin-bottom: 1.5rem;
+        }
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .header h1 {
+            color: var(--gold-text); font-size: 1.25rem;
+            text-shadow: 0 0 10px var(--gold-glow);
+            animation: marketPulse 3s infinite ease-in-out;
+        }
+        @keyframes marketPulse {
+            0%, 100% { text-shadow: 0 0 10px var(--gold-glow); }
+            50% { text-shadow: 0 0 20px var(--gold-glow), 0 0 30px var(--gold-glow); }
+        }
+        .status-group { text-align: right; font-size: 0.75rem; }
+        .status-group .status { color: var(--green-text); text-shadow: 0 0 5px var(--green-text); }
+        .market-time { color: var(--gold-text); font-size: 0.7rem; }
+        .controls { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
+        .control-button {
+            background: linear-gradient(145deg, rgba(45, 55, 72, 0.8), rgba(26, 31, 46, 0.8));
+            border: 1px solid var(--border-color);
+            color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 8px;
+            font-family: inherit; cursor: pointer; backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+        .control-button:hover {
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+        .control-button.play-btn { border-color: var(--green-text); color: var(--green-text); }
+        .control-button.play-btn:hover { background: linear-gradient(145deg, rgba(72, 187, 120, 0.1), rgba(72, 187, 120, 0.05)); }
+        .control-button.pause-btn { border-color: var(--red-text); color: var(--red-text); }
+        .control-button.pause-btn:hover { background: linear-gradient(145deg, rgba(245, 101, 101, 0.1), rgba(245, 101, 101, 0.05)); }
+        .control-button#reset-btn { border-color: var(--gold-text); color: var(--gold-text); }
+        .control-button#reset-btn:hover { background: linear-gradient(145deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05)); }
+
+        /* 3. DIAGRAM CONTAINER */
+        .diagram-container {
+            position: relative; width: 100%; height: 700px;
+            background: linear-gradient(135deg, var(--bg-medium) 0%, #1e2530 100%);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+        }
+        .diagram-container::after, .diagram-container::before {
+             content: ''; position: absolute; width: 25px; height: 25px;
+             border-color: var(--gold-text); border-style: solid; z-index: 1;
+             box-shadow: 0 0 15px var(--gold-glow); 
+             animation: tradingCorners 5s infinite ease-in-out;
+        }
+        .diagram-container::before { top: -3px; left: -3px; border-width: 3px 0 0 3px; }
+        .diagram-container::after { bottom: -3px; right: -3px; border-width: 0 3px 3px 0; }
+        @keyframes tradingCorners { 
+            0%, 100% { border-color: var(--gold-text); box-shadow: 0 0 15px var(--gold-glow); }
+            50% { border-color: #fff; box-shadow: 0 0 25px #fff; }
+        }
+
+        /* Market data ticker */
+        .market-ticker {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            color: var(--green-text);
+            animation: tickerUpdate 2s infinite ease-in-out;
+            z-index: 10;
+        }
+        @keyframes tickerUpdate {
+            0%, 100% { color: var(--green-text); }
+            50% { color: var(--gold-text); }
+        }
+
+        /* 4. NODES */
+        .node {
+            --node-color: var(--border-color);
+            position: absolute; width: 140px; height: 85px;
+            background: linear-gradient(145deg, var(--bg-light), #2a3441);
+            border: 2px solid var(--node-color);
+            border-radius: 10px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 0.25rem;
+            padding: 0.5rem; transform: translate(-50%, -50%);
+            transition: all 0.4s ease; opacity: 0;
+            animation: fadeIn 0.6s ease forwards;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+        .node .icon { 
+            color: var(--text-primary); transition: all 0.3s ease; 
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        .node .title { 
+            font-size: 0.7rem; text-align: center; line-height: 1.2; 
+            transition: all 0.3s ease; font-weight: 600;
+        }
+        .node.active {
+            border-color: var(--node-color); 
+            background: linear-gradient(145deg, #3a4553, var(--bg-light));
+            transform: translate(-50%, -50%) scale(1.08);
+            box-shadow: 0 0 25px var(--node-color), inset 0 0 15px rgba(0,0,0,0.4);
+        }
+        .node.active .icon, .node.active .title {
+            color: var(--node-color); text-shadow: 0 0 8px var(--node-color);
+        }
+        .node .processing-bar {
+            position: absolute; bottom: 0; left: 0; height: 4px; width: 0%;
+            background: linear-gradient(90deg, var(--node-color), #fff);
+            box-shadow: 0 0 10px var(--node-color);
+            border-radius: 0 0 8px 8px;
+        }
+        .node.active .processing-bar { animation: fillBar var(--anim-duration) infinite linear; }
+        @keyframes fillBar { 
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* Node-specific styling */
+        .node.stock-node {
+            background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-width: 2px;
+        }
+        .node.kafka-node {
+            background: linear-gradient(145deg, #2d4a5c, #1e3a46);
+            border-color: #4a90a4;
+        }
+        .node.topic-node {
+            background: linear-gradient(145deg, #3a2d5c, #2a1e46);
+            border-color: #7c3aed;
+        }
+        .node.system-node {
+            background: linear-gradient(145deg, #4a3c5c, #2d2a3e);
+            border-color: #6b46c1;
+        }
+        .node.db-node {
+            background: linear-gradient(145deg, #2d5c4a, #1e4636);
+            border-color: #3aed7c;
+        }
+
+        /* 5. SVG PATHS & TRADING FLOWS */
+        .paths-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; }
+        .path-line { 
+            fill: none; stroke-width: 2.5px; stroke-dasharray: 6, 4; 
+            transition: all 0.4s ease; opacity: 0.4;
+        }
+        .path-arrow { opacity: 0.4; transition: all 0.4s ease; }
+        .path-group.static .path-line { stroke-dasharray: 3, 2; opacity: 0.6; }
+        .path-group.static .path-arrow { opacity: 0.6; }
+        .path-group.active .path-line { opacity: 1; stroke-width: 4px; }
+        .path-group.active .path-arrow { opacity: 1; }
+        .path-group.active .path-line {
+            animation: tradingFlow var(--anim-duration) infinite linear;
+        }
+        @keyframes tradingFlow { 
+            0% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -20; }
+        }
+
+        /* Market data particles */
+        .data-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: var(--gold-glow);
+            border-radius: 50%;
+            opacity: 0;
+            box-shadow: 0 0 12px var(--gold-glow);
+            animation: marketDataFlow var(--anim-duration) ease-in-out forwards;
+        }
+        @keyframes marketDataFlow {
+            0% { opacity: 0; transform: scale(0.3); }
+            20% { opacity: 1; transform: scale(1.2); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.3); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="title-group">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 3v18h18"/>
+                    <path d="M18 17V9"/>
+                    <path d="M13 17V5"/>
+                    <path d="M8 17v-3"/>
+                </svg>
+                <h1>TradingFlow_HFT_System_v3.2.1</h1>
+            </div>
+            <div class="status-group">
+                <div class="market-time">NYSE: 09:30 - 16:00 EST</div>
+                <div class="status">MARKET: OPEN</div>
+            </div>
+        </header>
+
+        <div id="diagram-container" class="diagram-container">
+            <div class="market-ticker">
+                <div>AAPL: $175.23 ↗ 0.45%</div>
+                <div>NVDA: $892.45 ↗ 1.25%</div>
+                <div>TSLA: $178.32 ↘ 0.32%</div>
+            </div>
+            <svg id="paths-svg" class="paths-svg"></svg>
+            <div id="nodes-container"></div>
+        </div>
+
+        <div class="controls">
+            <button id="play-pause-btn" class="control-button play-btn">❚❚ PAUSE</button>
+            <button id="reset-btn" class="control-button">↻ RESET</button>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Finance-specific SVG icons
+        const ICONS = {
+            Apple: '<circle cx="12" cy="12" r="3"/><path d="M12 7v5l3 3"/>',
+            Microsoft: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M9 9h6v6h-6z"/>',
+            Amazon: '<path d="M2 12l1.09-1.09L12 19.82l8.91-8.91L22 12l-10 10L2 12z"/>',
+            Nvidia: '<path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/><path d="M12 22V12"/>',
+            Tesla: '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
+            Google: '<circle cx="12" cy="12" r="10"/><path d="M16 8l-4 4-4-4"/>',
+            Kafka: '<rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>',
+            Topic: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>',
+            Brain: '<path d="M12 2a10 10 0 1 0 10 10 10 10 0 0 0-10-10zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M8 12h8"/><path d="M12 8v8"/>',
+            Execution: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+            OrderBook: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/>',
+            Portfolio: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+            Database: '<ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />',
+            Analytics: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>'
+        };
+
+        // Finance system components
+        const COMPONENTS = [
+            // Stock data sources
+            { id: 'AAPL', title: '🍏 AAPL Data', icon: 'Apple', x: 8, y: 20, color: '#a2d2ff', type: 'stock' },
+            { id: 'MSFT', title: '🪟 MSFT Data', icon: 'Microsoft', x: 8, y: 35, color: '#d0f4de', type: 'stock' },
+            { id: 'AMZN', title: '📦 AMZN Data', icon: 'Amazon', x: 8, y: 50, color: '#ffe066', type: 'stock' },
+            { id: 'NVDA', title: '🎮 NVDA Data', icon: 'Nvidia', x: 8, y: 65, color: '#d3f9d8', type: 'stock' },
+            { id: 'TSLA', title: '🚗 TSLA Data', icon: 'Tesla', x: 8, y: 80, color: '#ffadad', type: 'stock' },
+            { id: 'GOOG', title: '🔍 GOOG Data', icon: 'Google', x: 8, y: 95, color: '#e0c3fc', type: 'stock' },
+            
+            // Kafka system
+            { id: 'KafkaBroker', title: '📊 Kafka Broker', icon: 'Kafka', x: 30, y: 57, color: '#4a90a4', type: 'kafka' },
+            
+            // Kafka topics
+            { id: 'TAAPL', title: 'topic_aapl', icon: 'Topic', x: 52, y: 20, color: '#a2d2ff', type: 'topic' },
+            { id: 'TMSFT', title: 'topic_msft', icon: 'Topic', x: 52, y: 35, color: '#d0f4de', type: 'topic' },
+            { id: 'TAMZN', title: 'topic_amzn', icon: 'Topic', x: 52, y: 50, color: '#ffe066', type: 'topic' },
+            { id: 'TNVDA', title: 'topic_nvda', icon: 'Topic', x: 52, y: 65, color: '#d3f9d8', type: 'topic' },
+            { id: 'TTSLA', title: 'topic_tsla', icon: 'Topic', x: 52, y: 80, color: '#ffadad', type: 'topic' },
+            { id: 'TGOOG', title: 'topic_goog', icon: 'Topic', x: 52, y: 95, color: '#e0c3fc', type: 'topic' },
+            
+            // Processing systems
+            { id: 'Strategy', title: '🧠 Strategy Engine', icon: 'Brain', x: 75, y: 40, color: '#8b5cf6', type: 'system' },
+            { id: 'Execution', title: '⚡ Execution System', icon: 'Execution', x: 75, y: 60, color: '#06b6d4', type: 'system' },
+            { id: 'OrderBook', title: '📝 Order Book', icon: 'OrderBook', x: 92, y: 50, color: '#f59e0b', type: 'system' },
+            { id: 'Portfolio', title: '💼 Portfolio State', icon: 'Portfolio', x: 92, y: 70, color: '#10b981', type: 'system' },
+            { id: 'Analytics', title: '📈 Market Analytics', icon: 'Analytics', x: 92, y: 20, color: '#ec4899', type: 'system' },
+            { id: 'Database', title: '💾 Trading Database', icon: 'Database', x: 92, y: 85, color: '#3aed7c', type: 'db' },
+        ];
+
+        // Trading flow steps
+        const FLOW_STEPS = [
+            // Step 1: Stock data to Kafka
+            { 
+                step: 1, 
+                activations: [
+                    { from: 'AAPL', to: 'KafkaBroker' },
+                    { from: 'MSFT', to: 'KafkaBroker' },
+                    { from: 'AMZN', to: 'KafkaBroker' }
+                ] 
+            },
+            // Step 2: More stock data to Kafka
+            { 
+                step: 2, 
+                activations: [
+                    { from: 'NVDA', to: 'KafkaBroker' },
+                    { from: 'TSLA', to: 'KafkaBroker' },
+                    { from: 'GOOG', to: 'KafkaBroker' }
+                ] 
+            },
+            // Step 3: Kafka to Topics (first batch)
+            { 
+                step: 3, 
+                activations: [
+                    { from: 'KafkaBroker', to: 'TAAPL' },
+                    { from: 'KafkaBroker', to: 'TMSFT' },
+                    { from: 'KafkaBroker', to: 'TAMZN' }
+                ] 
+            },
+            // Step 4: Kafka to Topics (second batch)
+            { 
+                step: 4, 
+                activations: [
+                    { from: 'KafkaBroker', to: 'TNVDA' },
+                    { from: 'KafkaBroker', to: 'TTSLA' },
+                    { from: 'KafkaBroker', to: 'TGOOG' }
+                ] 
+            },
+            // Step 5: Topics to Strategy Engine
+            { 
+                step: 5, 
+                activations: [
+                    { from: 'TAAPL', to: 'Strategy' },
+                    { from: 'TMSFT', to: 'Strategy' },
+                    { from: 'TAMZN', to: 'Strategy' },
+                    { from: 'TNVDA', to: 'Strategy' },
+                    { from: 'TTSLA', to: 'Strategy' },
+                    { from: 'TGOOG', to: 'Strategy' }
+                ] 
+            },
+            // Step 6: Strategy to Execution
+            { 
+                step: 6, 
+                activations: [
+                    { from: 'Strategy', to: 'Execution' }
+                ] 
+            },
+            // Step 7: Execution to Order Book and Portfolio
+            { 
+                step: 7, 
+                activations: [
+                    { from: 'Execution', to: 'OrderBook' },
+                    { from: 'Execution', to: 'Portfolio' },
+                    { from: 'Execution', to: 'Database' }
+                ] 
+            },
+            // Step 8: Analytics and Portfolio
+            { 
+                step: 8, 
+                activations: [
+                    { from: 'OrderBook', to: 'Analytics' },
+                    { from: 'Portfolio', to: 'Analytics' },
+                    { from: 'Database', to: 'Analytics' }
+                ] 
+            }
+        ];
+        
+        const ANIMATION_INTERVAL = 1000;
+        
+        let activeStep = 0, isPlaying = true, animationTimer = null;
+
+        const diagramContainer = document.getElementById('diagram-container');
+        const nodesContainer = document.getElementById('nodes-container');
+        const pathsSvg = document.getElementById('paths-svg');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const SVG_NS = "http://www.w3.org/2000/svg";
+
+        function renderNodes() {
+            nodesContainer.innerHTML = '';
+            COMPONENTS.forEach((node, index) => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = `node ${node.type}-node`;
+                nodeEl.id = `node-${node.id}`;
+                nodeEl.style.left = `${node.x}%`;
+                nodeEl.style.top = `${node.y}%`;
+                nodeEl.style.animationDelay = `${index * 80}ms`;
+                nodeEl.style.setProperty('--node-color', node.color);
+                nodeEl.innerHTML = `
+                    <svg class="icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        ${ICONS[node.icon]}
+                    </svg>
+                    <div class="title">${node.title}</div>
+                    <div class="processing-bar"></div>
+                `;
+                nodesContainer.appendChild(nodeEl);
+            });
+        }
+
+        function calculateArrowRotation(fromX, fromY, toX, toY) {
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            return angle;
+        }
+
+        function renderPaths() {
+            pathsSvg.innerHTML = '';
+            
+            const uniquePaths = new Set();
+            FLOW_STEPS.forEach(step => {
+                step.activations.forEach(activation => {
+                    uniquePaths.add(`${activation.from}-${activation.to}`);
+                });
+            });
+
+            const componentMap = new Map(COMPONENTS.map(c => [c.id, c]));
+            const containerWidth = diagramContainer.offsetWidth;
+            const containerHeight = diagramContainer.offsetHeight;
+
+            uniquePaths.forEach(pathKey => {
+                const [fromId, toId] = pathKey.split('-');
+                const fromNode = componentMap.get(fromId);
+                const toNode = componentMap.get(toId);
+                if (!fromNode || !toNode) return;
+
+                const fromX = (fromNode.x / 100) * containerWidth;
+                const fromY = (fromNode.y / 100) * containerHeight;
+                const toX = (toNode.x / 100) * containerWidth;
+                const toY = (toNode.y / 100) * containerHeight;
+                
+                // Create curved paths
+                const controlX = fromX + (toX - fromX) * 0.7;
+                const controlY = fromY + (toY - fromY) * 0.3;
+                const pathData = `M ${fromX} ${fromY} Q ${controlX} ${controlY} ${toX} ${toY}`;
+                
+                const group = document.createElementNS(SVG_NS, 'g');
+                group.setAttribute('class', 'path-group');
+                group.id = `path-${fromId}-to-${toId}`;
+                
+                const path = document.createElementNS(SVG_NS, 'path');
+                path.setAttribute('d', pathData);
+                path.setAttribute('class', 'path-line');
+                path.style.stroke = fromNode.color;
+                group.appendChild(path);
+
+                // Calculate arrow position and rotation
+                const arrowAngle = calculateArrowRotation(controlX, controlY, toX, toY);
+                const arrow = document.createElementNS(SVG_NS, 'polygon');
+                arrow.setAttribute('points', "-10,-5 0,0 -10,5 -8,0");
+                arrow.setAttribute('transform', `translate(${toX}, ${toY}) rotate(${arrowAngle})`);
+                arrow.setAttribute('class', 'path-arrow');
+                arrow.style.fill = fromNode.color;
+                group.appendChild(arrow);
+                
+                pathsSvg.appendChild(group);
+            });
+        }
+
+        function createDataParticle(fromX, fromY, toX, toY, color) {
+            const particle = document.createElement('div');
+            particle.className = 'data-particle';
+            particle.style.backgroundColor = color;
+            particle.style.boxShadow = `0 0 12px ${color}`;
+            particle.style.left = `${fromX}px`;
+            particle.style.top = `${fromY}px`;
+            
+            // Create curved path for particle animation
+            const controlX = fromX + (toX - fromX) * 0.7;
+            const controlY = fromY + (toY - fromY) * 0.3;
+            const keyframes = [
+                { left: `${fromX}px`, top: `${fromY}px` },
+                { left: `${controlX}px`, top: `${controlY}px` },
+                { left: `${toX}px`, top: `${toY}px` }
+            ];
+            
+            particle.animate(keyframes, {
+                duration: 800,
+                easing: 'ease-in-out'
+            });
+            
+            diagramContainer.appendChild(particle);
+            setTimeout(() => particle.remove(), 800);
+        }
+        
+        function updateActiveElements() {
+            document.querySelectorAll('.node.active').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.path-group.active').forEach(el => el.classList.remove('active'));
+
+            if (activeStep >= 0 && activeStep < FLOW_STEPS.length) {
+                const currentStep = FLOW_STEPS[activeStep];
+                const componentMap = new Map(COMPONENTS.map(c => [c.id, c]));
+                const containerWidth = diagramContainer.offsetWidth;
+                const containerHeight = diagramContainer.offsetHeight;
+
+                currentStep.activations.forEach(activation => {
+                    const fromNode = componentMap.get(activation.from);
+                    const toNode = componentMap.get(activation.to);
+                    
+                    document.getElementById(`node-${activation.from}`)?.classList.add('active');
+                    document.getElementById(`node-${activation.to}`)?.classList.add('active');
+                    
+                    const pathGroup = document.getElementById(`path-${activation.from}-to-${activation.to}`);
+                    if (pathGroup) {
+                        pathGroup.classList.add('active');
+                    }
+
+                    if (fromNode && toNode) {
+                        const fromX = (fromNode.x / 100) * containerWidth;
+                        const fromY = (fromNode.y / 100) * containerHeight;
+                        const toX = (toNode.x / 100) * containerWidth;
+                        const toY = (toNode.y / 100) * containerHeight;
+                        
+                        createDataParticle(fromX, fromY, toX, toY, fromNode.color);
+                    }
+                });
+            }
+        }
+        
+        function advanceStep() {
+            activeStep = (activeStep + 1) % FLOW_STEPS.length;
+            updateActiveElements();
+        }
+
+        function startAnimation() {
+            if (animationTimer) clearInterval(animationTimer);
+            if (isPlaying) {
+                animationTimer = setInterval(advanceStep, ANIMATION_INTERVAL);
+            }
+        }
+        
+        function updatePlayPauseButton() {
+            playPauseBtn.textContent = isPlaying ? '❚❚ PAUSE' : '▶ RESUME';
+            playPauseBtn.className = isPlaying ? 
+                'control-button pause-btn' : 
+                'control-button play-btn';
+        }
+
+        playPauseBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            isPlaying ? startAnimation() : clearInterval(animationTimer);
+            updatePlayPauseButton();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            activeStep = 0;
+            updateActiveElements();
+            if (!isPlaying) {
+                isPlaying = true;
+                updatePlayPauseButton();
+            }
+            startAnimation();
+        });
+
+        function init() {
+            renderNodes();
+            renderPaths();
+            updatePlayPauseButton();
+            startAnimation();
+            
+            // Update market ticker prices
+            setInterval(() => {
+                const ticker = document.querySelector('.market-ticker');
+                if (ticker) {
+                    const prices = [
+                        `AAPL: $${(175.23 + Math.random() * 2).toFixed(2)} ${Math.random() > 0.5 ? '↗' : '↘'} ${(Math.random() * 0.5).toFixed(2)}%`,
+                        `NVDA: $${(892.45 + Math.random() * 5).toFixed(2)} ${Math.random() > 0.4 ? '↗' : '↘'} ${(Math.random() * 0.8).toFixed(2)}%`,
+                        `TSLA: $${(178.32 + Math.random() * 1.5).toFixed(2)} ${Math.random() > 0.6 ? '↗' : '↘'} ${(Math.random() * 0.3).toFixed(2)}%`
+                    ];
+                    ticker.innerHTML = prices.map(p => `<div>${p}</div>`).join('');
+                }
+            }, 3000);
+        }
+
+        window.addEventListener('resize', () => {
+            renderPaths();
+            updateActiveElements();
+        });
+
+        init();
+    });
+    </script>
+</body>
+</html>
