@@ -1,438 +1,730 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bhanu Sohan Pingali</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        background: 'hsl(var(--background))',
-                        foreground: 'hsl(var(--foreground))',
-                        card: 'hsl(var(--card))',
-                        'card-foreground': 'hsl(var(--card-foreground))',
-                        popover: 'hsl(var(--popover))',
-                        'popover-foreground': 'hsl(var(--popover-foreground))',
-                        primary: 'hsl(var(--primary))',
-                        'primary-foreground': 'hsl(var(--primary-foreground))',
-                        secondary: 'hsl(var(--secondary))',
-                        'secondary-foreground': 'hsl(var(--secondary-foreground))',
-                        muted: 'hsl(var(--muted))',
-                        'muted-foreground': 'hsl(var(--muted-foreground))',
-                        accent: 'hsl(var(--accent))',
-                        'accent-foreground': 'hsl(var(--accent-foreground))',
-                        destructive: 'hsl(var(--destructive))',
-                        'destructive-foreground': 'hsl(var(--destructive-foreground))',
-                        border: 'hsl(var(--border))',
-                        input: 'hsl(var(--input))',
-                        ring: 'hsl(var(--ring))',
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        :root {
-            --background: 0 0% 100%;
-            --foreground: 0 0% 3.9%;
-            --card: 0 0% 100%;
-            --card-foreground: 0 0% 3.9%;
-            --popover: 0 0% 100%;
-            --popover-foreground: 0 0% 3.9%;
-            --primary: 0 0% 9%;
-            --primary-foreground: 0 0% 98%;
-            --secondary: 0 0% 96.1%;
-            --secondary-foreground: 0 0% 9%;
-            --muted: 0 0% 96.1%;
-            --muted-foreground: 0 0% 45.1%;
-            --accent: 0 0% 96.1%;
-            --accent-foreground: 0 0% 9%;
-            --destructive: 0 84.2% 60.2%;
-            --destructive-foreground: 0 0% 98%;
-            /* --- CHANGE: Made the light mode border blacker --- */
-            --border: 0 0% 9%; 
-            --input: 0 0% 14.9%;
-            --ring: 0 0% 3.9%;
-            --radius: 0.5rem;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bhanu Sohan Pingali</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'green-custom': '142 76% 36%',
+            'blue-custom': '200 98% 50%',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            card: 'hsl(var(--card))',
+            'card-foreground': 'hsl(var(--card-foreground))',
+            popover: 'hsl(var(--popover))',
+            'popover-foreground': 'hsl(var(--popover-foreground))',
+            primary: 'hsl(var(--primary))',
+            'primary-foreground': 'hsl(var(--primary-foreground))',
+            secondary: 'hsl(var(--secondary))',
+            'secondary-foreground': 'hsl(var(--secondary-foreground))',
+            muted: 'hsl(var(--muted))',
+            'muted-foreground': 'hsl(var(--muted-foreground))',
+            accent: 'hsl(var(--accent))',
+            'accent-foreground': 'hsl(var(--accent-foreground))',
+            destructive: 'hsl(var(--destructive))',
+            'destructive-foreground': 'hsl(var(--destructive-foreground))',
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    /* ---------------------------------- */
+    /* CSS VARIABLES                      */
+    /* ---------------------------------- */
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 0 0% 5%;
+      --card: 0 0% 100%;
+      --card-foreground: 0 0% 5%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 0 0% 5%;
+      --primary: 142 76% 36%; /* green */
+      --primary-foreground: 0 0% 100%;
+      --secondary: 200 100% 97%;
+      --secondary-foreground: 200 100% 20%;
+      --muted: 0 0% 96%;
+      --muted-foreground: 0 0% 45%;
+      --accent: 200 98% 50%; /* blue */
+      --accent-foreground: 0 0% 100%;
+      --destructive: 0 84% 60%;
+      --destructive-foreground: 0 0% 100%;
+      --border: 142 76% 36%;
+      --input: 0 0% 14%;
+      --ring: 0 0% 3.9%;
+      --radius: 0.5rem;
+    }
+    .dark {
+      --background: 0 0% 6%;
+      --foreground: 0 0% 96%;
+      --card: 0 0% 10%;
+      --card-foreground: 0 0% 96%;
+      --popover: 0 0% 10%;
+      --popover-foreground: 0 0% 96%;
+      --primary: 142 76% 45%;
+      --primary-foreground: 0 0% 5%;
+      --secondary: 200 40% 20%;
+      --secondary-foreground: 0 0% 96%;
+      --muted: 0 0% 14%;
+      --muted-foreground: 0 0% 65%;
+      --accent: 200 98% 60%;
+      --accent-foreground: 0 0% 5%;
+      --destructive: 0 62% 42%;
+      --destructive-foreground: 0 0% 96%;
+      --border: 200 40% 40%;
+      --input: 0 0% 20%;
+      --ring: 0 0% 83%;
+    }
 
-        .dark {
-            --background: 0 0% 3.9%;
-            --foreground: 0 0% 98%;
-            --card: 0 0% 3.9%;
-            --card-foreground: 0 0% 98%;
-            --popover: 0 0% 3.9%;
-            --popover-foreground: 0 0% 98%;
-            --primary: 0 0% 98%;
-            --primary-foreground: 0 0% 9%;
-            --secondary: 0 0% 14.9%;
-            --secondary-foreground: 0 0% 98%;
-            --muted: 0 0% 14.9%;
-            --muted-foreground: 0 0% 63.9%;
-            --accent: 0 0% 14.9%;
-            --accent-foreground: 0 0% 98%;
-            --destructive: 0 62.8% 30.6%;
-            --destructive-foreground: 0 0% 98%;
-            /* --- CHANGE: Made the dark mode border more prominent --- */
-            --border: 0 0% 25%;
-            --input: 0 0% 14.9%;
-            --ring: 0 0% 83.1%;
-        }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      overflow-x: hidden;
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+      transition: background 0.4s, color 0.4s;
+    }
 
-        .hover-underline::after {
-            content: '';
-            position: absolute;
-            bottom: -2px; /* Adjusted for better positioning */
-            left: 0;
-            width: 0;
-            height: 2px;
-            background-color: currentColor;
-            transition: width 0.3s ease-out;
-        }
+    /* Fullscreen animated network canvas */
+    #bg-network {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0; /* behind everything but still above html bg */
+      pointer-events: none;
+    }
 
-        .hover-underline:hover::after {
-            width: 100%;
-        }
-    </style>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    /* Scroll progress bar */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(to right, #00ffa3, #00d0ff);
+      width: 0%;
+      z-index: 60;
+      transition: width 0.2s;
+    }
+
+    /* Generic fade-in utility (once) */
+    .fade-in-on-scroll {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .fade-in-on-scroll.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Glow hover effect */
+    .hover-glow:hover {
+      box-shadow: 0 0 15px rgba(0, 255, 128, 0.55), 0 0 25px rgba(0, 212, 255, 0.45);
+      transition: box-shadow 0.25s ease, transform 0.25s ease;
+      transform: translateY(-2px) scale(1.01);
+    }
+
+    /* Underline hover */
+    .hover-underline {
+      position: relative;
+    }
+    .hover-underline::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: currentColor;
+      transition: width 0.25s ease-out;
+    }
+    .hover-underline:hover::after {
+      width: 100%;
+    }
+
+    /* Active nav indicator */
+    .nav-active {
+      color: hsl(var(--primary));
+      font-weight: 600;
+    }
+
+    /* Fix for clipped descenders (like g, p, y) in gradient hero text */
+    .hero-name {
+      line-height: 1.15;
+      padding-bottom: 0.1em; /* ensures descenders fully visible */
+      display: inline-block;
+    }
+  </style>
 </head>
-<body class="bg-background text-foreground font-sans transition-colors duration-300">
+<body class="font-sans antialiased relative">
+  <!-- Background Graph Network Canvas -->
+  <canvas id="bg-network"></canvas>
+  <!-- Scroll Progress Bar -->
+  <div class="scroll-progress" id="scroll-progress"></div>
 
-    <!-- Dark Mode Toggle -->
-    <div class="fixed top-4 right-4 z-50 flex items-center space-x-3 bg-card border-2 border-border rounded-full px-4 py-2 shadow-lg">
-        <i data-lucide="sun" class="h-4 w-4"></i>
-        <label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="dark-mode-toggle" class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
-        </label>
-        <i data-lucide="moon" class="h-4 w-4"></i>
+  <!-- Dark Mode Toggle -->
+  <div class="fixed top-4 right-4 z-50 flex items-center space-x-3 bg-card/80 backdrop-blur-sm border border-border rounded-full px-4 py-2 shadow-lg">
+    <i data-lucide="sun" class="h-4 w-4"></i>
+    <label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer">
+      <input type="checkbox" id="dark-mode-toggle" class="sr-only peer" />
+      <div class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-sky-500"></div>
+    </label>
+    <i data-lucide="moon" class="h-4 w-4"></i>
+  </div>
+
+  <!-- NAV -->
+  <nav class="fixed top-0 left-0 w-full bg-background/70 backdrop-blur-md border-b border-border z-40 transition-colors duration-300">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex justify-center space-x-8 text-sm md:text-base">
+      <button data-nav="about"      onclick="scrollToSection('about')"      class="hover-underline relative capitalize">About</button>
+      <button data-nav="experience" onclick="scrollToSection('experience')" class="hover-underline relative capitalize">Experience</button>
+      <button data-nav="projects"   onclick="scrollToSection('projects')"   class="hover-underline relative capitalize">Projects</button>
+      <button data-nav="skills"     onclick="scrollToSection('skills')"     class="hover-underline relative capitalize">Skills</button>
+      <button data-nav="education"  onclick="scrollToSection('education')"  class="hover-underline relative capitalize">Education</button>
     </div>
+  </nav>
 
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b-2 border-border z-40 transition-colors duration-300">
-        <div class="max-w-4xl mx-auto px-6 py-4">
-            <div class="flex justify-center space-x-8">
-                <button onclick="scrollToSection('about')" class="text-sm font-medium hover-underline relative capitalize">About</button>
-                <button onclick="scrollToSection('experience')" class="text-sm font-medium hover-underline relative capitalize">Experience</button>
-                <button onclick="scrollToSection('projects')" class="text-sm font-medium hover-underline relative capitalize">Projects</button>
-                <button onclick="scrollToSection('skills')" class="text-sm font-medium hover-underline relative capitalize">Skills</button>
-                <button onclick="scrollToSection('education')" class="text-sm font-medium hover-underline relative capitalize">Education</button>
+  <!-- HERO -->
+  <header class="pt-40 md:pt-48 text-center fade-in-on-scroll" id="hero">
+    <h1 class="hero-name text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-400 via-emerald-300 to-sky-400 bg-clip-text text-transparent">
+      Bhanu Sohan Pingali
+    </h1>
+    <p id="typing-text" class="text-xl md:text-2xl text-muted-foreground mt-4 min-h-[2.5rem]"></p>
+    <div class="flex justify-center mt-6 space-x-6">
+      <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener noreferrer" class="p-3 rounded-full border-2 border-border hover-glow" aria-label="GitHub Profile">
+        <i data-lucide="github" class="h-6 w-6"></i>
+      </a>
+      <a href="https://www.linkedin.com/in/bhanu-sohan-pingali/" target="_blank" rel="noopener noreferrer" class="p-3 rounded-full border-2 border-border hover-glow" aria-label="LinkedIn Profile">
+        <i data-lucide="linkedin" class="h-6 w-6"></i>
+      </a>
+    </div>
+    <button onclick="window.open('https://drive.google.com/file/d/1EhjY7FYbGwIX19ldJZ6zAkukLm_HegK-/view?usp=sharing', '_blank')" class="mt-8 inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-green-500 to-sky-500 text-white rounded-xl text-lg font-medium hover-glow">
+      <i data-lucide="download" class="h-4 w-4 mr-2"></i>
+      Download Résumé
+    </button>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="max-w-5xl mx-auto px-6 space-y-32 pt-24 pb-24 relative z-10">
+
+    <!-- About -->
+    <section id="about" class="scroll-mt-32 fade-in-on-scroll">
+      <h2 class="text-4xl font-bold text-center mb-6 bg-gradient-to-r from-green-400 to-sky-400 bg-clip-text text-transparent">About</h2>
+      <p class="text-lg text-center text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+        I am a Computer Science major at the University of Massachusetts Amherst actively involved in research on Large Language Models (LLMs). My key interests include backend infrastructure, distributed systems, data engineering, and AI/ML. I'm available for Summer 2026 internships and eager to contribute to innovative, high-impact technical projects.
+      </p>
+    </section>
+
+    <!-- Experience -->
+    <section id="experience" class="scroll-mt-32 fade-in-on-scroll">
+      <h2 class="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-green-400 to-sky-400 bg-clip-text text-transparent">Experience</h2>
+      <div class="space-y-10">
+        <!-- BluSapphire -->
+        <article class="p-8 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm transition-shadow duration-300">
+          <div class="flex flex-col sm:flex-row items-start justify-between mb-4 gap-4">
+            <div>
+              <h3 class="text-2xl font-bold text-foreground">Software Engineering Intern</h3>
+              <p class="text-lg text-muted-foreground font-medium">BluSapphire Cyber Systems</p>
             </div>
+            <div class="text-left sm:text-right text-sm text-muted-foreground flex-shrink-0">
+              <p>June 2025 – Aug 2025</p>
+              <p>Hyderabad, India</p>
+            </div>
+          </div>
+          <ul class="space-y-3 list-disc list-inside text-muted-foreground">
+            <li>Collaborated with the data engineering and development teams on a cross-functional approach to build an internal dev tool.</li>
+            <li>The tool consisted of an agentic AI workflow using LLMs which generated log parser scripts in vector.dev, streamlining a tedious data engineering process, handled 15+ log formats including Syslog, CEF, CLF, Apache, Linux, etc.</li>
+            <li>Implemented a Swarm based team using AutoGen with feedback loops enabled by handoffs as well as function calling capabilities.</li>
+            <li>Engineered a RAG pipeline, embedding log formats, VRL functions and Grok patterns and reranked results with a cross encoder.</li>
+            <li>Built an async testing loop that executed vector.dev config files via subprocesses, verifying accurate JSON parsing.</li>
+            <li>Presented the MVP to the CTO which projected a saving of 30% time for the data engineering team and 25% time saving in testing.</li>
+          </ul>
+        </article>
+
+        <!-- CIIR -->
+        <article class="p-8 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm transition-shadow duration-300">
+          <div class="flex flex-col sm:flex-row items-start justify-between mb-4 gap-4">
+            <div>
+              <h3 class="text-2xl font-bold text-foreground">Undergraduate Researcher</h3>
+              <p class="text-lg text-muted-foreground font-medium">Center for Intelligent Information Retrieval, University of Massachusetts Amherst</p>
+            </div>
+            <div class="text-left sm:text-right text-sm text-muted-foreground flex-shrink-0">
+              <p>Nov 2024 – May 2025</p>
+              <p>Amherst, MA</p>
+            </div>
+          </div>
+          <ul class="space-y-3 list-disc list-inside text-muted-foreground">
+            <li>Worked in a team of 3 to analyze the creativity of Large Language Models under the guidance of a Postdoc in the CIIR.</li>
+            <li>Currently surveying 25+ papers to analyze the creativity of LLMs. Specifically, the memorization of training data, understanding how training data is processed and its impact on creativity.</li>
+            <li>Collaborated with a Postdoc and another team member in the CIIR to explore and evaluate reasoning capabilities in LLMs.</li>
+            <li>Engineered a testing pipeline for a novel QAE technique involving synthetic question generation and retrieval techniques to understand the reasoning capabilities of LLMs.</li>
+            <li>Experimented with parallel and branched workflows and implemented 7 workflows to test reasoning in LLMs on AMC-12 probability contest questions, including techniques like Zero-Shot, COT, Few-Shot etc, generating key insights on synthetic question generation and reasoning in LLMs.</li>
+          </ul>
+        </article>
+
+        <!-- BioNLP -->
+        <article class="p-8 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm transition-shadow duration-300">
+          <div class="flex flex-col sm:flex-row items-start justify-between mb-4 gap-4">
+            <div>
+              <h3 class="text-2xl font-bold text-foreground">Undergraduate Research Volunteer</h3>
+              <p class="text-lg text-muted-foreground font-medium">BioNLP Lab, University of Massachusetts Amherst</p>
+            </div>
+            <div class="text-left sm:text-right text-sm text-muted-foreground flex-shrink-0">
+              <p>Dec 2024 – Jan 2025</p>
+              <p>Amherst, MA</p>
+            </div>
+          </div>
+          <ul class="space-y-3 list-disc list-inside text-muted-foreground">
+            <li>Conducted a Literature review of 5+ papers focusing on the potential use cases of LLMs in the field of healthcare.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- Projects -->
+    <section id="projects" class="scroll-mt-32 fade-in-on-scroll">
+      <h2 class="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-green-400 to-sky-400 bg-clip-text text-transparent">Projects</h2>
+      <div class="space-y-10">
+        <!-- SimuloSIEM -->
+        <article class="p-8 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm transition-shadow duration-300">
+          <div class="flex items-start justify-between mb-4">
+            <h3 class="text-2xl font-bold text-foreground">SimuloSIEM</h3>
+            <a href="https://github.com/P-Bhanu-Sohan/SimuloSIEM" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub Repository">
+              <i data-lucide="github" class="h-5 w-5"></i>
+            </a>
+          </div>
+          <ul class="space-y-3 list-disc list-inside text-muted-foreground mb-4">
+            <li>Processed 100+ logs per second via a Kafka-based SIEM pipeline using synthetically generated log traffic.</li>
+            <li>Used Vector.dev to parse and route streaming logs to PostgreSQL (structured storage) and Redis (in-memory cache).</li>
+            <li>Developed a detection engine to identify brute force & anomaly patterns by scanning Redis + triggers.</li>
+            <li>Designed Grafana dashboards visualizing real-time metrics via Redis & PostgreSQL queries.</li>
+            <li>Containerized full pipeline with Docker for reproducible local + cloud deployments.</li>
+          </ul>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Kafka</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">ZooKeeper</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Redis</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Docker</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Grafana</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Python</span>
+          </div>
+        </article>
+
+        <!-- TradeBooks -->
+        <article class="p-8 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm transition-shadow duration-300">
+          <div class="flex items-start justify-between mb-4">
+            <h3 class="text-2xl font-bold text-foreground">TradeBooks</h3>
+            <a href="https://github.com/P-Bhanu-Sohan/TradeBooks" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub Repository">
+              <i data-lucide="github" class="h-5 w-5"></i>
+            </a>
+          </div>
+          <ul class="space-y-3 list-disc list-inside text-muted-foreground mb-4">
+            <li>Engineered a data streaming pipeline for historical intraday 1-minute stock bars, simulating live market trading.</li>
+            <li>Built a scalable event-driven trading system using Kafka and ZooKeeper for stock data streaming and processing.</li>
+            <li>Implemented a quantitative strategy that captured quick price reversals using EMA filters with ATR-driven dynamic risk management.</li>
+            <li>Built a real-time dashboard with FastAPI (REST API) and JavaScript, visualizing order book, P&L, and trades.</li>
+          </ul>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Kafka</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">ZooKeeper</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">FastAPI</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Python</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">JavaScript</span>
+          </div>
+        </article>
+
+        <!-- EASPayments -->
+        <article class="p-8 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm transition-shadow duration-300">
+          <div class="flex items-start justify-between mb-4">
+            <h3 class="text-2xl font-bold text-foreground">EASPayments</h3>
+            <a href="https://github.com/P-Bhanu-Sohan/EASPayments" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub Repository">
+              <i data-lucide="github" class="h-5 w-5"></i>
+            </a>
+          </div>
+          <ul class="space-y-3 list-disc list-inside text-muted-foreground mb-4">
+            <li>Developed a distributed payment transaction processor with gRPC-based communication between microservices.</li>
+            <li>Implemented idempotency keys in PostgreSQL to ensure fault-tolerant and non duplicate payment processing.</li>
+            <li>Designed a distributed locking mechanism using Redis on concurrent transactions, preventing race conditions.</li>
+            <li>Containerized the architecture using Docker with separate components for Accounts, Ledger, and Notifications.</li>
+            <li>Load tested with 3 accounts with random transactions to ensure scalability and accurate processing of data among the microservices.</li>
+          </ul>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">FastAPI</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">PostgreSQL</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Redis</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Docker</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Python</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">gRPC</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">JavaScript</span>
+          </div>
+        </article>
+
+        <!-- UMass Eats -->
+        <article class="p-8 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm transition-shadow duration-300">
+          <div class="flex items-start justify-between mb-4">
+            <h3 class="text-2xl font-bold text-foreground">UMass Eats</h3>
+            <a href="https://github.com/P-Bhanu-Sohan/HackUMass12App" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub Repository">
+              <i data-lucide="github" class="h-5 w-5"></i>
+            </a>
+          </div>
+          <ul class="space-y-3 list-disc list-inside text-muted-foreground mb-4">
+            <li>UMass Eats is a LLM powered chatbot that recommends meals to users based on their personal preferences.</li>
+            <li>Uses the OpenAI Assistants API and implements RAG using OpenAI Vector Store for accurate recommendation.</li>
+          </ul>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Python</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">OpenAI API</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Streamlit</span>
+          </div>
+        </article>
+
+
+
+        <!-- API RateLimiter -->
+        <article class="p-8 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm transition-shadow duration-300">
+          <div class="flex items-start justify-between mb-4">
+            <h3 class="text-2xl font-bold text-foreground">API RateLimiter</h3>
+            <a href="https://github.com/P-Bhanu-Sohan/API-Rate-Limiter" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub Repository">
+              <i data-lucide="github" class="h-5 w-5"></i>
+            </a>
+          </div>
+          <ul class="space-y-3 list-disc list-inside text-muted-foreground mb-4">
+            <li>Designed & implemented an API Rate Limiter for 50 req/s using Java Spring Boot with a sliding-window algorithm.</li>
+            <li>Used Redis for O(1) request tracking and distributed rate enforcement across instances.</li>
+            <li>Built a full-stack demo with a custom JavaScript frontend + Java traffic simulator for stress validation.</li>
+          </ul>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Java</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Spring</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Redis</span>
+            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Docker</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Skills -->
+    <section id="skills" class="scroll-mt-32 fade-in-on-scroll">
+      <h2 class="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-green-400 to-sky-400 bg-clip-text text-transparent">Technical Skills</h2>
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- Languages & Frameworks -->
+        <div class="p-6 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm">
+          <div class="flex items-center space-x-3 mb-4">
+            <i data-lucide="code" class="h-5 w-5 text-primary"></i>
+            <h3 class="text-xl font-bold text-foreground">Languages & Frameworks</h3>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Python</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Java</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">JavaScript</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Typescript</span>
+          </div>
         </div>
-    </nav>
+        <!-- Infra & DBs -->
+        <div class="p-6 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm">
+          <div class="flex items-center space-x-3 mb-4">
+            <i data-lucide="database" class="h-5 w-5 text-primary"></i>
+            <h3 class="text-xl font-bold text-foreground">Infrastructure & Databases</h3>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">PostgreSQL</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Kafka</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">ZooKeeper</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Redis</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Docker</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Vector.dev</span>
+          </div>
+        </div>
+        <!-- ML & AI -->
+        <div class="p-6 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm">
+          <div class="flex items-center space-x-3 mb-4">
+            <i data-lucide="brain-circuit" class="h-5 w-5 text-primary"></i>
+            <h3 class="text-xl font-bold text-foreground">ML & AI</h3>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">NumPy</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Pandas</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">PyTorch</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">AutoGen</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">LangChain</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">ChromaDB</span>
+          </div>
+        </div>
+        <!-- Version Control -->
+        <div class="p-6 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm">
+          <div class="flex items-center space-x-3 mb-4">
+            <i data-lucide="git-branch" class="h-5 w-5 text-primary"></i>
+            <h3 class="text-xl font-bold text-foreground">Version Control</h3>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Git</span>
+            <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">GitHub</span>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <div class="max-w-4xl mx-auto px-6 pt-24 pb-12"> <!-- Adjusted padding -->
-        <!-- Hero Section -->
-        <section class="py-16 text-center">
-            <h1 class="text-5xl md:text-6xl font-bold mb-6 text-foreground">
-                Bhanu Sohan Pingali
-            </h1>
-            <p class="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-                Software Engineer & AI Researcher
-            </p>
-            
-            <div class="flex justify-center space-x-6 mb-8">
-                <a href="https://www.linkedin.com/in/bhanu-sohan-pingali/" target="_blank" rel="noopener noreferrer" class="p-3 rounded-full border-2 border-border hover:scale-105 transition-transform hover:bg-accent" aria-label="LinkedIn Profile">
-                    <i data-lucide="linkedin" class="h-6 w-6"></i>
-                </a>
-                <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener noreferrer" class="p-3 rounded-full border-2 border-border hover:scale-105 transition-transform hover:bg-accent" aria-label="GitHub Profile">
-                    <i data-lucide="github" class="h-6 w-6"></i>
-                </a>
+    <!-- Education -->
+    <section id="education" class="scroll-mt-32 fade-in-on-scroll">
+      <h2 class="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-green-400 to-sky-400 bg-clip-text text-transparent">Education & Awards</h2>
+      <div class="p-8 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm">
+        <div class="space-y-8">
+          <div class="flex items-start space-x-4">
+            <i data-lucide="graduation-cap" class="h-8 w-8 text-muted-foreground mt-1 flex-shrink-0"></i>
+            <div>
+              <h3 class="text-2xl font-bold text-foreground">University of Massachusetts Amherst</h3>
+              <p class="text-lg text-muted-foreground">B.S. Computer Science • GPA 3.97 • May 2028</p>
+              <p class="text-md text-muted-foreground">Relevant Coursework: Data Structures, Object Oriented Programming, Multivariate Calculus, Statistics, Linear Algebra.</p>
             </div>
-    
-            <button onclick="window.open('https://drive.google.com/file/d/1EhjY7FYbGwIX19ldJZ6zAkukLm_HegK-/view?usp=sharing', '_blank')" class="inline-flex items-center justify-center px-8 py-4 bg-primary text-primary-foreground rounded-md text-lg font-medium hover:scale-105 transition-transform">
-                <i data-lucide="download" class="h-4 w-4 mr-2"></i>
-                Download Résumé
-            </button>
-        </section>
-    
-        <!-- About Section -->
-        <section id="about" class="py-16">
-            <div class="text-center">
-                <h2 class="text-4xl font-bold mb-4">About</h2>
-                <p class="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                    I am a Computer Science major at UMass Amherst actively involved in research on LLMs. My key interests include Backend Infra, Machine Learning (ML), and Quantitative Finance. I am actively seeking internship opportunities for Summer 2026 where I can contribute to innovative projects.
-                </p>
+          </div>
+          <div class="border-t-2 border-border pt-6">
+            <div class="flex items-start space-x-4">
+              <i data-lucide="award" class="h-8 w-8 text-muted-foreground mt-1 flex-shrink-0"></i>
+              <div>
+                <h4 class="text-xl font-bold text-foreground mb-2">Awards & Recognition</h4>
+                <ul class="space-y-2 text-muted-foreground list-disc list-inside">
+                  <li>Chancellor's Award ($16,000 annually)</li>
+                  <li>Dean's List (All Semesters)</li>
+                </ul>
+              </div>
             </div>
-        </section>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        <!-- Experience Section -->
-        <section id="experience" class="py-16">
-            <h2 class="text-4xl font-bold text-center mb-16">Experience</h2>
-            <div class="space-y-8">
-                <div class="p-8 border-2 border-border rounded-lg hover:shadow-xl transition-shadow duration-300">
-                    <div class="flex flex-col sm:flex-row items-start justify-between mb-4">
-                        <div>
-                            <h3 class="text-2xl font-bold text-foreground">Software Engineering Intern</h3>
-                            <p class="text-lg text-muted-foreground font-medium">BluSapphire Cyber Systems</p>
-                        </div>
-                        <div class="text-left sm:text-right text-sm text-muted-foreground mt-2 sm:mt-0 flex-shrink-0">
-                            <p>June 2025 - Aug 2025</p>
-                            <p>Hyderabad, India</p>
-                        </div>
-                    </div>
-                    <ul class="space-y-3 list-disc list-inside text-muted-foreground">
-                        <li>Architected an agentic log pipeline for the data engineering team automating the manual writing of log parser scripts.</li>
-                        <li>Implemented a multi-agentic AI workflow to generate vector.dev configurations for shifting cybersecurity log formats.</li>
-                        <li>Used the AutoGen Framework and LLMs to interpret log structures, plan VRL transformations, and generate parsing logic.</li>
-                        <li>Implemented a Swarm based team with feedback loops enabled by handoffs as well as function calling capabilities.</li>
-                        <li>Engineered an agentic RAG pipeline using ChromaDB, embedding log formats and VRL functions and Grok patterns.</li>
-                        <li>Built an agentic testing loop that autonomously executed vector.dev config files via subprocesses, verifying accurate parsing.</li>
-                    </ul>
-                </div>
-                
-                <div class="p-8 border-2 border-border rounded-lg hover:shadow-xl transition-shadow duration-300">
-                    <div class="flex flex-col sm:flex-row items-start justify-between mb-4">
-                        <div>
-                            <h3 class="text-2xl font-bold text-foreground">Undergraduate Researcher</h3>
-                            <p class="text-lg text-muted-foreground font-medium">Center for Intelligent Information Retrieval</p>
-                        </div>
-                        <div class="text-left sm:text-right text-sm text-muted-foreground mt-2 sm:mt-0 flex-shrink-0">
-                            <p>Nov 2024 – May 2025</p>
-                            <p>Amherst, MA</p>
-                        </div>
-                    </div>
-                    <ul class="space-y-3 list-disc list-inside text-muted-foreground">
-                        <li>Currently surveying 25+ papers to analyze the creativity of LLMs.</li>
-                        <li>Researched the memorization/generalization of training data of Transformer-based models, understanding how LLMs process training data and its impact on creativity.</li>
-                        <li>Engineered a testing pipeline for a novel QAE technique involving synthetic question generation and retrieval techniques to understand the reasoning capabilities of LLMs.</li>
-                        <li>Experimented with parallel and branched workflows and implemented 7 workflows to test reasoning in LLMs on AMC-12 probability contest questions, including techniques like Zero-Shot, COT, Few-Shot, etc.</li>
-                    </ul>
-                </div>
+  </main>
 
-                <div class="p-8 border-2 border-border rounded-lg hover:shadow-xl transition-shadow duration-300">
-                    <div class="flex flex-col sm:flex-row items-start justify-between mb-4">
-                        <div>
-                            <h3 class="text-2xl font-bold text-foreground">Undergraduate Researcher</h3>
-                            <p class="text-lg text-muted-foreground font-medium">BioNLP Lab, UMass Amherst</p>
-                        </div>
-                        <div class="text-left sm:text-right text-sm text-muted-foreground mt-2 sm:mt-0 flex-shrink-0">
-                             <p>Nov 2024 – May 2025</p>
-                             <p>Amherst, MA</p>
-                        </div>
-                    </div>
-                    <ul class="space-y-3 list-disc list-inside text-muted-foreground">
-                        <li>Reviewed 5+ papers on clinical-domain fine-tuning of LLMs. Focused on specializing LLMs to the clinical domain, focusing on medical analysis and calculations using the MED-CALC-BENCH dataset.</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- Projects Section -->
-        <section id="projects" class="py-16">
-            <h2 class="text-4xl font-bold text-center mb-16">Projects</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener noreferrer" class="group block p-8 border-2 border-border rounded-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <div class="flex items-start justify-between mb-4">
-                        <h3 class="text-2xl font-bold text-foreground">TradeBooks</h3>
-                        <i data-lucide="arrow-up-right" class="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors"></i>
-                    </div>
-                    <p class="text-muted-foreground mb-4 leading-relaxed">Real Time HFT style trading simulation using Kafka & ZooKeeper</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Kafka</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">FastAPI</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">JavaScript</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">ZooKeeper</span>
-                    </div>
-                </a>
-                <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener noreferrer" class="group block p-8 border-2 border-border rounded-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <div class="flex items-start justify-between mb-4">
-                        <h3 class="text-2xl font-bold text-foreground">CyberDefender</h3>
-                        <i data-lucide="arrow-up-right" class="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors"></i>
-                    </div>
-                    <p class="text-muted-foreground mb-4 leading-relaxed">Intrusion detection system using Neural Networks, XGBoost, and Isolation Forest</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Python</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">XGBoost</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">PyTorch</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Scikit-learn</span>
-                    </div>
-                </a>
-                <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener noreferrer" class="group block p-8 border-2 border-border rounded-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <div class="flex items-start justify-between mb-4">
-                        <h3 class="text-2xl font-bold text-foreground">UMass Eats</h3>
-                        <i data-lucide="arrow-up-right" class="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors"></i>
-                    </div>
-                    <p class="text-muted-foreground mb-4 leading-relaxed">RAG chatbot powered by OpenAI Assistants API with Streamlit interface</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">OpenAI</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Streamlit</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Python</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">RAG</span>
-                    </div>
-                </a>
-                <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener noreferrer" class="group block p-8 border-2 border-border rounded-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <div class="flex items-start justify-between mb-4">
-                        <h3 class="text-2xl font-bold text-foreground">FinEdge</h3>
-                        <i data-lucide="arrow-up-right" class="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors"></i>
-                    </div>
-                    <p class="text-muted-foreground mb-4 leading-relaxed">Options pricing using Black-Scholes and Monte Carlo methods with Seaborn visualizations</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Python</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">NumPy</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Seaborn</span>
-                        <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium">Monte Carlo</span>
-                    </div>
-                </a>
-            </div>
-        </section>
-
-        <!-- Skills Section -->
-        <section id="skills" class="py-16">
-            <h2 class="text-4xl font-bold text-center mb-16">Technical Skills</h2>
-            <div class="space-y-8">
-                <div class="p-6 border-2 border-border rounded-lg">
-                    <div class="flex items-center space-x-3 mb-4">
-                        <i data-lucide="code" class="h-5 w-5 text-primary"></i>
-                        <h3 class="text-xl font-bold text-foreground">Languages & Frameworks</h3>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Python</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Java</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">JavaScript</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">TypeScript</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">FastAPI</span>
-                    </div>
-                </div>
-                <div class="p-6 border-2 border-border rounded-lg">
-                    <div class="flex items-center space-x-3 mb-4">
-                        <i data-lucide="database" class="h-5 w-5 text-primary"></i>
-                        <h3 class="text-xl font-bold text-foreground">Infrastructure & Databases</h3>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">MongoDB</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Kafka</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">ZooKeeper</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Redis</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Vector.dev</span>
-                    </div>
-                </div>
-                <div class="p-6 border-2 border-border rounded-lg">
-                    <div class="flex items-center space-x-3 mb-4">
-                        <i data-lucide="brain-circuit" class="h-5 w-5 text-primary"></i>
-                        <h3 class="text-xl font-bold text-foreground">ML & AI</h3>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">NumPy</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Pandas</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Scikit-learn</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">PyTorch</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">ChromaDB</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">FAISS</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">AutoGen</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">LangChain</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">LangGraph</span>
-                    </div>
-                </div>
-                <div class="p-6 border-2 border-border rounded-lg">
-                    <div class="flex items-center space-x-3 mb-4">
-                        <i data-lucide="git-branch" class="h-5 w-5 text-primary"></i>
-                        <h3 class="text-xl font-bold text-foreground">Version Control</h3>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">Git</span>
-                        <span class="px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-medium">GitHub</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Education & Awards Section -->
-        <section id="education" class="py-16">
-            <h2 class="text-4xl font-bold text-center mb-16">Education & Awards</h2>
-            <div class="p-8 border-2 border-border rounded-lg">
-                <div class="space-y-6">
-                    <div class="flex items-start space-x-4">
-                        <i data-lucide="graduation-cap" class="h-8 w-8 text-muted-foreground mt-1 flex-shrink-0"></i>
-                        <div>
-                            <h3 class="text-2xl font-bold text-foreground">University of Massachusetts Amherst</h3>
-                            <p class="text-lg text-muted-foreground">B.S. Computer Science • GPA 3.97 • May 2028</p>
-                        </div>
-                    </div>
-                    
-                    <div class="border-t-2 border-border pt-6">
-                        <div class="flex items-start space-x-4">
-                            <i data-lucide="award" class="h-8 w-8 text-muted-foreground mt-1 flex-shrink-0"></i>
-                            <div>
-                                <h4 class="text-xl font-bold text-foreground mb-2">Awards & Recognition</h4>
-                                <ul class="space-y-2 text-muted-foreground list-disc list-inside">
-                                    <li>Chancellor's Award ($64k scholarship)</li>
-                                    <li>Dean's List (Fall 2024, Spring 2025)</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="py-12 border-t-2 border-border">
-            <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
-                <div class="flex items-center space-x-6">
-                    <a href="mailto:bpingali@umass.edu" class="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors hover-underline relative">
-                        <i data-lucide="mail" class="h-4 w-4"></i>
-                        <span>bpingali@umass.edu</span>
-                    </a>
-                </div>
-                
-                <div class="flex items-center space-x-4">
-                    <a href="https://www.linkedin.com/in/bhanu-sohan-pingali/" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
-                        <i data-lucide="linkedin" class="h-5 w-5"></i>
-                    </a>
-                    <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
-                        <i data-lucide="github" class="h-5 w-5"></i>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="text-center mt-8 text-sm text-muted-foreground">
-                © 2025 Bhanu Sohan Pingali
-            </div>
-        </footer>
+  <!-- FOOTER -->
+  <footer class="py-12 border-t border-border relative z-10">
+    <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center space-x-6">
+        <a href="mailto:bpingali@umass.edu" class="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors hover-underline relative">
+          <i data-lucide="mail" class="h-4 w-4"></i>
+          <span>bpingali@umass.edu</span>
+        </a>
+      </div>
+      <div class="flex items-center space-x-4">
+        <a href="https://www.linkedin.com/in/bhanu-sohan-pingali/" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="LinkedIn">
+          <i data-lucide="linkedin" class="h-5 w-5"></i>
+        </a>
+        <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub">
+          <i data-lucide="github" class="h-5 w-5"></i>
+        </a>
+      </div>
     </div>
-    <script>
-        lucide.createIcons();
+    <div class="text-center mt-8 text-sm text-muted-foreground">
+      © 2025 Bhanu Sohan Pingali
+    </div>
+  </footer>
 
-        const darkModeToggle = document.getElementById('dark-mode-toggle');
+  <!-- ICONS -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    lucide.createIcons();
 
-        // Check for saved theme preference or default to light mode
-        const savedTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    /* ---------------------------- */
+    /* Dark Mode Persistence        */
+    /* ---------------------------- */
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      document.documentElement.classList.add('dark');
+      darkModeToggle.checked = true;
+    } else {
+      darkModeToggle.checked = false;
+    }
+    darkModeToggle.addEventListener('change', () => {
+      if (darkModeToggle.checked) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      }
+    });
 
-        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-            document.documentElement.classList.add('dark');
-            darkModeToggle.checked = true;
-        } else {
-            document.documentElement.classList.remove('dark');
-            darkModeToggle.checked = false;
+    /* ---------------------------- */
+    /* Scroll Progress Bar          */
+    /* ---------------------------- */
+    const progressEl = document.getElementById('scroll-progress');
+    window.addEventListener('scroll', () => {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const percent = (window.scrollY / scrollHeight) * 100;
+      progressEl.style.width = percent + '%';
+    });
+
+    /* ---------------------------- */
+    /* Smooth Scroll Helper         */
+    /* ---------------------------- */
+    window.scrollToSection = function(sectionId) {
+      const el = document.getElementById(sectionId);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    /* ---------------------------- */
+    /* Nav Active Section Highlight */
+    /* ---------------------------- */
+    const navButtons = document.querySelectorAll('nav [data-nav]');
+    const sections = Array.from(navButtons).map(btn => document.getElementById(btn.dataset.nav));
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const id = entry.target.id;
+        const btn = document.querySelector(`nav [data-nav="${id}"]`);
+        if (entry.isIntersecting) {
+          navButtons.forEach(b => b.classList.remove('nav-active'));
+          if (btn) btn.classList.add('nav-active');
         }
+      });
+    }, { root: null, rootMargin: '0px 0px -60% 0px', threshold: 0 });
+    sections.forEach(sec => sec && observer.observe(sec));
 
-        darkModeToggle.addEventListener('change', () => {
-            if (darkModeToggle.checked) {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            }
-        });
-
-        function scrollToSection(sectionId) {
-            const element = document.getElementById(sectionId);
-            const navHeight = document.querySelector('nav').offsetHeight;
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - navHeight;
-
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-            });
+    /* ---------------------------- */
+    /* Typewriter Tagline           */
+    /* ---------------------------- */
+    const typingText = document.getElementById('typing-text');
+    const phrases = [
+      'Software Engineer & AI Researcher',
+      'Distributed Systems & Backend Infra',
+      'Quantitative Trading Enthusiast',
+      'Data Engineering ',
+    ];
+    let i = 0, j = 0, current = [], deleting = false;
+    function type() {
+      typingText.innerHTML = current.join('');
+      if (i < phrases.length) {
+        if (!deleting && j < phrases[i].length) {
+          current.push(phrases[i][j]);
+          j++;
+        } else if (!deleting && j === phrases[i].length) {
+          deleting = true;
+          setTimeout(type, 1400);
+          return;
+        } else if (deleting && j > 0) {
+          current.pop();
+          j--;
+        } else if (deleting && j === 0) {
+          deleting = false;
+          i = (i + 1) % phrases.length;
         }
-    </script>
+      }
+      setTimeout(type, deleting ? 45 : 90);
+    }
+    type();
+
+    /* ---------------------------- */
+    /* Fade-in on Scroll            */
+    /* ---------------------------- */
+    const fadeEls = document.querySelectorAll('.fade-in-on-scroll');
+    const fadeObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          fadeObserver.unobserve(entry.target); // animate once
+        }
+      });
+    }, { threshold: 0.1 });
+    fadeEls.forEach(el => fadeObserver.observe(el));
+
+    /* ---------------------------- */
+    /* Animated Graph Background    */
+    /* ---------------------------- */
+    const canvas = document.getElementById('bg-network');
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width = window.innerWidth * window.devicePixelRatio;
+    let H = canvas.height = window.innerHeight * window.devicePixelRatio;
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    const NODE_COUNT = 80;
+    const MAX_DIST = 120;
+    const nodes = [];
+    for (let n = 0; n < NODE_COUNT; n++) {
+      nodes.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 2.2,
+        vy: (Math.random() - 0.5) * 2.2,
+        r: 2 + Math.random() * 2.5,
+      });
+    }
+
+    let mouse = { x: -9999, y: -9999 };
+    window.addEventListener('mousemove', e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    window.addEventListener('mouseleave', () => {
+      mouse.x = -9999;
+      mouse.y = -9999;
+    });
+
+    function drawNetwork() {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      // update + draw nodes
+      for (const node of nodes) {
+        node.x += node.vx;
+        node.y += node.vy;
+        if (node.x < 0 || node.x > window.innerWidth) node.vx *= -1;
+        if (node.y < 0 || node.y > window.innerHeight) node.vy *= -1;
+      }
+      // lines
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < MAX_DIST) {
+            const alpha = 1 - dist / MAX_DIST;
+            ctx.strokeStyle = `rgba(0, 220, 255, ${alpha * 0.25})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      // draw nodes (dual-color gradient-ish)
+      for (const node of nodes) {
+        const distMouse = Math.hypot(mouse.x - node.x, mouse.y - node.y);
+        const glow = distMouse < 140 ? (1 - distMouse / 140) : 0;
+        const baseGreen = 255;
+        const baseBlue = 255;
+        const g = baseGreen;
+        const b = Math.floor(180 + glow * 75); // more blue near mouse
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.r + glow * 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, ${g}, ${b}, ${0.8 + glow * 0.2})`;
+        ctx.fill();
+      }
+      requestAnimationFrame(drawNetwork);
+    }
+    drawNetwork();
+
+    function resizeCanvas() {
+      W = canvas.width = window.innerWidth * window.devicePixelRatio;
+      H = canvas.height = window.innerHeight * window.devicePixelRatio;
+      canvas.style.width = '100vw';
+      canvas.style.height = '100vh';
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+    window.addEventListener('resize', resizeCanvas);
+  </script>
 </body>
 </html>
