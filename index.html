@@ -239,15 +239,14 @@
             </div>
             <div class="text-left sm:text-right text-sm text-muted-foreground flex-shrink-0">
               <p>June 2025 – Aug 2025</p>
-              <p>Hyderabad, India</p>
             </div>
           </div>
           <ul class="space-y-3 list-disc list-inside text-muted-foreground">
-            <li>Collaborated with the data engineering and development teams on a cross-functional approach to build an internal dev tool.</li>
-            <li>The tool consisted of an agentic AI workflow using LLMs which generated log parser scripts in vector.dev, streamlining a tedious data engineering process, handled 15+ log formats including Syslog, CEF, CLF, Apache, Linux, etc.</li>
-            <li>Implemented a Swarm based team using AutoGen with feedback loops enabled by handoffs as well as function calling capabilities.</li>
-            <li>Engineered a RAG pipeline, embedding log formats, VRL functions and Grok patterns and reranked results with a cross encoder.</li>
-            <li>Built an async testing loop that executed vector.dev config files via subprocesses, verifying accurate JSON parsing.</li>
+            <li>Collaborated with data engineering and development teams to build an internal tool projecting a 30% time saving for the data engineering tasks and 25% time saving in testing tasks.</li>
+            <li>The tool consisted of an agentic AI workflow using LLMs which generated log parser scripts in vector.dev, streamlining a tedious data engineering process, and handled 5+ log formats including Syslog, CEF, CLF, Apache, Linux, etc.</li>
+            <li>Implemented a Swarm based team using AutoGen with feedback loops enabled by handoffs as well as tool calling capabilities. </li>
+            <li>Developed the frontend UI using HTML/CSS/JS and implemented backend REST APIs with FastAPI.</li>
+            <li>Built an asynchronous testing loop that executed vector.dev config files via subprocesses, verifying accurate JSON parsing.</li>
           </ul>
         </article>
 
@@ -304,11 +303,10 @@
             </a>
           </div>
           <ul class="space-y-3 list-disc list-inside text-muted-foreground mb-4">
-            <li>Processed 100+ logs per second via a Kafka-based SIEM pipeline using synthetically generated log traffic.</li>
-            <li>Used Vector.dev to parse and route streaming logs to PostgreSQL (structured storage) and Redis (in-memory cache).</li>
-            <li>Developed a detection engine to identify brute force & anomaly patterns by scanning Redis + triggers.</li>
-            <li>Designed Grafana dashboards visualizing real-time metrics via Redis & PostgreSQL queries.</li>
-            <li>Containerized full pipeline with Docker for reproducible local + cloud deployments.</li>
+            <li>Processed synthetically generated logs through a Kafka-based SIEM pipeline for real-time threat detection</li>
+            <li>Used Vector.dev to parse and route streaming logs to PostgreSQL for structured storage and Redis for in-memory caching.</li>
+            <li>Developed a detection engine to identify basic patterns like brute force attacks by scanning Redis and triggering alerts.</li>
+            <li>Designed Grafana dashboards to visualize data by querying Redis and PostgreSQL in real time and containerized using Docker.</li>
           </ul>
           <div class="flex flex-wrap gap-2">
             <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Kafka</span>
@@ -329,9 +327,9 @@
             </a>
           </div>
           <ul class="space-y-3 list-disc list-inside text-muted-foreground mb-4">
-            <li>Engineered a data streaming pipeline for historical intraday 1-minute stock bars, simulating live market trading.</li>
-            <li>Built a scalable event-driven trading system using Kafka and ZooKeeper for stock data streaming and processing.</li>
-            <li>Implemented a quantitative strategy that captured quick price reversals using EMA filters with ATR-driven dynamic risk management.</li>
+            <li>Designed a data pipeline to simulate live trading from OHLC ticks for historical 1-minute stock data.</li>
+            <li>Built an event-driven trading system using Kafka and ZooKeeper for stock data processing.</li>
+            <li>Implemented a quantitative strategy that captured quick price reversals using EMA with ATR-driven dynamic risk management.</li>
             <li>Built a real-time dashboard with FastAPI (REST API) and JavaScript, visualizing order book, P&L, and trades.</li>
           </ul>
           <div class="flex flex-wrap gap-2">
@@ -354,7 +352,7 @@
           <ul class="space-y-3 list-disc list-inside text-muted-foreground mb-4">
             <li>Developed a distributed payment transaction processor with gRPC-based communication between microservices.</li>
             <li>Implemented idempotency keys in PostgreSQL to ensure fault-tolerant and non duplicate payment processing.</li>
-            <li>Designed a distributed locking mechanism using Redis on concurrent transactions, preventing race conditions.</li>
+            <li>Designed a distributed locking mechanism using Redis to synchronize concurrent transactions, ensuring data consistency.</li>
             <li>Containerized the architecture using Docker with separate components for Accounts, Ledger, and Notifications.</li>
             <li>Load tested with 3 accounts with random transactions to ensure scalability and accurate processing of data among the microservices.</li>
           </ul>
@@ -385,29 +383,6 @@
             <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Python</span>
             <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">OpenAI API</span>
             <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Streamlit</span>
-          </div>
-        </article>
-
-
-
-        <!-- API RateLimiter -->
-        <article class="p-8 border-2 border-border rounded-lg hover-glow bg-card/80 backdrop-blur-sm transition-shadow duration-300">
-          <div class="flex items-start justify-between mb-4">
-            <h3 class="text-2xl font-bold text-foreground">API RateLimiter</h3>
-            <a href="https://github.com/P-Bhanu-Sohan/API-Rate-Limiter" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground transition-colors" aria-label="GitHub Repository">
-              <i data-lucide="github" class="h-5 w-5"></i>
-            </a>
-          </div>
-          <ul class="space-y-3 list-disc list-inside text-muted-foreground mb-4">
-            <li>Designed & implemented an API Rate Limiter for 50 req/s using Java Spring Boot with a sliding-window algorithm.</li>
-            <li>Used Redis for O(1) request tracking and distributed rate enforcement across instances.</li>
-            <li>Built a full-stack demo with a custom JavaScript frontend + Java traffic simulator for stress validation.</li>
-          </ul>
-          <div class="flex flex-wrap gap-2">
-            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Java</span>
-            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Spring</span>
-            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Redis</span>
-            <span class="px-3 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-border">Docker</span>
           </div>
         </article>
       </div>
