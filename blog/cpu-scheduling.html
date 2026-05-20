@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ✏️ CHANGE: Update the title tag to match your post title -->
+  <title>An Introduction to CPU Scheduling and Multithreading</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #f7f5f2;
+      --surface:   #efecea;
+      --border:    #d8d4ce;
+      --text:      #1a1916;
+      --muted:     #7a766e;
+      --accent:    #2a4a7f;
+      --accent-lt: #dce6f5;
+      --tag-bg:    #e8e4df;
+      --tag-text:  #4a453e;
+      --link:      #2a4a7f;
+      --mono:      'DM Mono', monospace;
+      --serif:     'EB Garamond', Georgia, serif;
+      --radius:    4px;
+      --max:       680px;
+      --trans:     0.2s ease;
+    }
+    [data-theme="dark"] {
+      --bg:        #131210;
+      --surface:   #1d1b18;
+      --border:    #2e2b26;
+      --text:      #e8e4dc;
+      --muted:     #7a766e;
+      --accent:    #7aa2d4;
+      --accent-lt: #1a2536;
+      --tag-bg:    #242118;
+      --tag-text:  #b0aa9e;
+      --link:      #7aa2d4;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.7;
+      background: var(--bg);
+      color: var(--text);
+      transition: background var(--trans), color var(--trans);
+    }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Nav */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      transition: background var(--trans);
+    }
+    .nav-inner {
+      max-width: var(--max); margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between; height: 52px;
+    }
+    .nav-logo { font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; color: var(--text); }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a {
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+      color: var(--muted); text-transform: uppercase; transition: color var(--trans);
+    }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .theme-btn {
+      background: none; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 4px 10px; cursor: pointer; font-family: var(--mono); font-size: 11px;
+      color: var(--muted); letter-spacing: 0.04em;
+      transition: border-color var(--trans), color var(--trans);
+    }
+    .theme-btn:hover { color: var(--text); border-color: var(--muted); }
+
+    /* Layout */
+    .site-wrapper { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+
+    /* Back link */
+    .post-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted);
+      padding: 60px 0 0; margin-bottom: 0;
+      border: none; background: none; cursor: pointer;
+    }
+    .post-back:hover { color: var(--accent); text-decoration: none; }
+
+    /* Post header */
+    .post-header { padding: 28px 0 40px; border-bottom: 1px solid var(--border); }
+    .post-eyebrow {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+    }
+    .post-title {
+      font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 400;
+      line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 20px;
+    }
+    .post-title em { font-style: italic; color: var(--accent); }
+    .post-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+    .post-meta-item { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+    /* Post body */
+    .post-body { padding: 48px 0 80px; font-size: 1.05rem; line-height: 1.85; }
+    .post-body h2 { font-size: 1.5rem; margin: 40px 0 16px; font-weight: 400; }
+    .post-body h3 { font-size: 1.2rem; margin: 32px 0 12px; font-weight: 500; }
+    .post-body p  { margin-bottom: 20px; }
+    .post-body ul, .post-body ol { padding-left: 24px; margin-bottom: 20px; }
+    .post-body li { margin-bottom: 8px; }
+    .post-body a  { color: var(--accent); }
+    .post-body code {
+      font-family: var(--mono); font-size: 0.85em;
+      background: var(--surface); padding: 2px 6px; border-radius: 2px;
+    }
+    .post-body pre {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; overflow-x: auto; margin-bottom: 24px;
+    }
+    .post-body pre code { background: none; padding: 0; font-size: 0.9em; }
+    .post-body blockquote {
+      border-left: 3px solid var(--accent); padding-left: 20px;
+      color: var(--muted); font-style: italic; margin: 24px 0;
+    }
+    .post-body img {
+      width: 100%; margin: 28px 0; border-radius: var(--radius);
+      border: 1px solid var(--border); display: block;
+    }
+    .post-body .caption {
+      font-family: var(--mono); font-size: 11px; color: var(--muted);
+      text-align: center; margin-top: -20px; margin-bottom: 28px;
+    }
+
+    /* Footer */
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner {
+      max-width: var(--max); margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-copy { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .footer-links a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <!-- Links go back to your main portfolio page -->
+    <a class="nav-logo" href="../index.html">Bhanu Sohan Pingali</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../index.html#blog">Blog</a>
+      <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener">GitHub &#8599;</a>
+      <a href="https://linkedin.com/in/bspingali" target="_blank" rel="noopener">LinkedIn &#8599;</a>
+      <button class="theme-btn" id="themeBtn">&#9789; dark</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="site-wrapper">
+
+    <a class="post-back" href="../index.html#blog">← Back to blog</a>
+
+    <header class="post-header">
+
+      <!-- ✏️ CHANGE: Update the date -->
+      <p class="post-eyebrow">Blog &middot; May 20, 2026</p>
+
+      <!-- ✏️ CHANGE: Update the post title. Wrap a word in <em> for the italic accent style -->
+      <h1 class="post-title">An Introduction to <em>CPU Scheduling</em> and Multithreading</h1>
+
+      <div class="post-meta">
+        <span class="post-meta-item">Bhanu Sohan Pingali</span>
+        <!-- ✏️ OPTIONAL: Add a reading time estimate, e.g. "8 min read" -->
+        <span class="post-meta-item">8 min read</span>
+      </div>
+
+    </header>
+
+    <article class="post-body">
+
+      <!--
+      ============================================================
+        ✏️ WRITE YOUR POST CONTENT BELOW THIS LINE
+      ============================================================
+
+      AVAILABLE ELEMENTS — just copy/paste what you need:
+
+      PARAGRAPH:
+        <p>Your text here.</p>
+
+      HEADING (section title):
+        <h2>Section Title</h2>
+
+      SUBHEADING:
+        <h3>Subsection</h3>
+
+      INLINE CODE:
+        <code>some_function()</code>
+
+      CODE BLOCK:
+        <pre><code>
+        fn main() {
+            println!("hello world");
+        }
+        </code></pre>
+
+      BLOCKQUOTE:
+        <blockquote>A quote or callout goes here.</blockquote>
+
+      BULLET LIST:
+        <ul>
+          <li>First item</li>
+          <li>Second item</li>
+        </ul>
+
+      NUMBERED LIST:
+        <ol>
+          <li>First step</li>
+          <li>Second step</li>
+        </ol>
+
+      IMAGE (put image files in the same /blog/ folder):
+        <img src="my-image.png" alt="Describe the image" />
+        <p class="caption">Optional caption under the image</p>
+
+      LINK:
+        <a href="https://example.com">link text</a>
+
+      ============================================================
+      -->
+
+      <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Understanding CPU Scheduling and Multithreading</title>
+<style>
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 18px;
+    line-height: 1.8;
+    color: #1a1a1a;
+    background-color: #ffffff;
+    max-width: 720px;
+    margin: 60px auto;
+    padding: 0 24px 80px;
+  }
+
+  h1 {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 0.4em;
+    line-height: 1.3;
+  }
+
+  h2 {
+    font-size: 1.4em;
+    font-weight: bold;
+    margin-top: 2em;
+    margin-bottom: 0.4em;
+  }
+
+  h3 {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-top: 1.4em;
+    margin-bottom: 0.2em;
+  }
+
+  p {
+    margin-bottom: 1em;
+  }
+
+  ul, ol {
+    margin-left: 1.5em;
+    margin-bottom: 1em;
+  }
+
+  li {
+    margin-bottom: 0.25em;
+  }
+
+  pre {
+    background-color: #f4f4f4;
+    border-left: 3px solid #cccccc;
+    padding: 12px 16px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.88em;
+    overflow-x: auto;
+    margin: 1.2em 0;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #dddddd;
+    margin: 2.4em 0;
+  }
+
+  strong {
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+
+
+<p>
+Imagine trying to solve a massive puzzle with thousands of pieces scattered across a table.
+Some pieces clearly fit together immediately, some need to wait until the surrounding structure is built,
+and some get pushed aside because they are not useful at that moment.
+</p>
+
+<p>A computer works in a surprisingly similar way.</p>
+
+<p>
+Programs constantly generate tasks: opening files, loading webpages, playing music, running calculations,
+waiting for user input, and communicating with hardware. The operating system must organize all these tasks
+efficiently inside memory and decide which task gets CPU time at any given moment.
+</p>
+
+<p>
+At first, this sounds simple. Just run everything one after another, right?. But in reality, not all tasks can run
+immediately. Some tasks need data from disk, some wait for network responses, some are more important than
+others, and some simply cannot fit into execution at the same time.
+</p>
+
+<p><strong>This is where the CPU Scheduler comes in.</strong></p>
+
+<p>
+The CPU scheduler is one of the most important parts of an operating system. Its job is to decide which
+process runs next, how long it runs, when it should pause, and when another process should take over.
+Without scheduling, modern multitasking systems would feel slow, unresponsive, and chaotic.
+</p>
+<img 
+  src="../images/puzzle.png" 
+  alt="Puzzle analogy for CPU scheduling"
+  style="
+    width: 100%;
+    margin: 24px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  "
+/>
+
+<hr />
+
+<h2>Understanding Processes</h2>
+
+<p>Before diving into how the scheduler works, it helps to understand what it is actually scheduling.</p>
+
+<p>
+A <strong>process</strong> is simply a program in execution.
+</p>
+
+<ul>
+  <li>Your browser is a process</li>
+  <li>Spotify is a process</li>
+  <li>A game is a process</li>
+</ul>
+
+<p>Each one needs memory, CPU time, access to files and devices, and various system resources to function.</p>
+
+<p>
+The CPU itself is limited, though. Even with multiple cores, there are usually far more active processes than
+CPUs available to run them simultaneously. Because of this, processes constantly move between different states.
+</p>
+
+<h3>Ready</h3>
+<p>The process is prepared to execute and is waiting for CPU time.</p>
+
+<h3>Running</h3>
+<p>The process is currently executing instructions on the CPU.</p>
+
+<h3>Waiting / Blocked</h3>
+<p>
+The process cannot continue until some event occurs. For example, consider a call like:
+</p>
+
+<pre>read(fd, buffer, size);</pre>
+
+<p>
+If the requested data is not immediately available, the process pauses and waits. Rather than wasting CPU
+time sitting idle, the scheduler gives that time to another process.
+</p>
+
+<h3>Terminated</h3>
+<p>The process has finished execution.</p>
+<img 
+  src="../images/SysCalls.png" 
+  alt="Puzzle analogy for CPU scheduling"
+  style="
+    width: 100%;
+    margin: 24px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  "
+/>
+<hr />
+
+<h2>Kernel Trapping and System Calls</h2>
+
+<p>
+With an understanding of how processes behave, it is worth looking at how they interact with the operating
+system itself.
+</p>
+
+<p>
+User programs cannot directly access hardware or sensitive system resources. Instead, they request services
+from the operating system using system calls. When a process makes one of these calls, the CPU switches from
+user mode to kernel mode. This is called a kernel trap. Common examples include:
+</p>
+
+<ul>
+  <li>Reading a file</li>
+  <li>Allocating memory</li>
+  <li>Creating a process</li>
+  <li>Sending network data</li>
+</ul>
+
+<p>
+The kernel takes control, performs the requested operation, and then returns execution back to the process.
+</p>
+<img 
+  src="../images/access.png" 
+  alt="Puzzle analogy for CPU scheduling"
+  style="
+    width: 80%;
+    margin: 18px 0;
+    border-radius: 6px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  "
+/>
+<hr />
+
+<h2>Context Switching</h2>
+
+<p>
+Allowing the kernel to swap between processes introduces its own challenge: how does the system pick up
+exactly where it left off?
+</p>
+
+<p>
+Imagine multiple people sharing a desk to solve puzzles. Every time one person leaves and another takes over,
+everything on the desk must be saved and then restored. A <strong>context switch</strong> works the same way.
+</p>
+
+<ol>
+  <li>Save the current process state</li>
+  <li>Store CPU registers</li>
+  <li>Load the next process state</li>
+  <li>Resume execution</li>
+</ol>
+
+<p>
+This creates the illusion of parallel execution. However, switching too frequently introduces overhead, so the
+scheduler must be thoughtful about when and how often it happens.
+</p>
+<img 
+  src="../images/contextswitching.png" 
+  alt="Puzzle analogy for CPU scheduling"
+  style="
+    width: 100%;
+    margin: 24px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  "
+/>
+<hr />
+
+<h2>Round Robin Scheduling</h2>
+
+<p>
+One of the most straightforward scheduling strategies is Round Robin, which is designed to keep things fair.
+Each process gets a fixed slice of time called a time quantum. If the process is still running when the quantum expires, it is preempted and moved to the back of the queue.
+</p>
+
+<h3>Advantages</h3>
+<ul>
+  <li>Fair</li>
+  <li>Responsive</li>
+</ul>
+
+<h3>Disadvantages</h3>
+<ul>
+  <li>Too many context switches if the quantum is too small</li>
+</ul>
+
+<hr />
+
+<h2>Shortest Job First (SJF)</h2>
+
+<p>
+Round Robin treats all processes equally, but sometimes it makes sense to prioritize efficiency over fairness.
+Shortest Job First takes a different approach, having the scheduler pick the process with the smallest
+estimated execution time.
+</p>
+
+<h3>Advantages</h3>
+<ul>
+  <li>Low average waiting time</li>
+</ul>
+
+<h3>Disadvantages</h3>
+<ul>
+  <li>Starvation of long jobs</li>
+  <li>Hard to estimate execution time accurately</li>
+</ul>
+
+<hr />
+
+<h2>Priority Scheduling</h2>
+
+<p>
+Starvation aside, some situations require more than just efficiency. They require urgency. Some processes are
+simply more important than others:
+</p>
+
+<ul>
+  <li>Audio playback</li>
+  <li>Real-time communication</li>
+  <li>System services</li>
+</ul>
+
+<p>
+Priority scheduling lets high-priority processes jump the queue. Low-priority tasks can still suffer from
+starvation, but this is typically handled through a technique called aging, which gradually raises the
+priority of processes that have been waiting a long time.
+</p>
+
+<hr />
+<img 
+  src="../images/ThreadProcess.png" 
+  alt="Puzzle analogy for CPU scheduling"
+  style="
+    width: 100%;
+    margin: 24px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  "
+/>
+<h2>Processes vs Threads</h2>
+
+<p>
+So far, the focus has been on scheduling between processes. But within a single process, there is another
+layer of concurrency worth understanding.
+</p>
+
+<p>
+A <strong>thread</strong> is the smallest unit of execution inside a process. A video streaming app, for
+instance, might use separate threads for rendering, input handling, networking, and video decoding.
+</p>
+
+<h3>Shared by threads:</h3>
+<ul>
+  <li>Code</li>
+  <li>Heap</li>
+  <li>Global variables</li>
+  <li>Files</li>
+</ul>
+
+<h3>Not shared:</h3>
+<ul>
+  <li>Stack</li>
+  <li>Registers</li>
+  <li>Program counter</li>
+</ul>
+
+<hr />
+<img 
+  src="../images/concurrency.png" 
+  alt="Puzzle analogy for CPU scheduling"
+  style="
+    width: 100%;
+    margin: 24px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  "
+/>
+<h2>Race Conditions</h2>
+
+<p>
+Sharing resources between threads is powerful, but it comes with a significant risk. A race condition occurs
+when multiple threads modify shared data without coordinating with each other.
+</p>
+
+<pre>
+Balance = 100
+
+ATM A withdraws 80
+ATM B withdraws 50
+</pre>
+
+<p>
+If both read the balance at the same time before either has written its result, the final balance could end
+up wrong. The system never catches the overdraft because each ATM was working from stale information.
+</p>
+
+<hr />
+
+<h2>Mutex</h2>
+
+<p>
+The solution to race conditions is to enforce exclusive access. A mutex allows only one thread to access a
+shared resource at a time.
+</p>
+
+<pre>
+lock(mutex);
+counter++;
+unlock(mutex);
+</pre>
+
+<p>
+Any other thread that wants access must wait until the mutex is released before proceeding.
+</p>
+
+<hr />
+
+<h2>Semaphore</h2>
+
+<p>
+A mutex is all-or-nothing, but sometimes a resource can support more than one concurrent user. A semaphore
+generalizes the idea by allowing a fixed number of threads to access a resource simultaneously.
+</p>
+
+<p>
+A useful analogy is a parking lot with a limited number of spaces. When a space is taken, the count drops.
+When a car leaves, the count rises. A thread that arrives when the count is zero simply waits until a spot
+opens up.
+</p>
+
+<hr />
+
+<h2>Scheduling and Synchronization Working Together</h2>
+
+<p>
+These two ideas are not separate concerns. They are deeply connected. When a thread blocks, whether because
+it is waiting on I/O, trying to acquire a mutex, or waiting on a semaphore, it is moved to the waiting state.
+The scheduler immediately gives the CPU to another thread that is ready to run. When the blocking condition
+is resolved, the thread returns to the ready queue and waits for its next turn.
+</p>
+
+<p>
+The scheduler and the synchronization primitives work in tandem to keep the system moving efficiently without
+letting any thread monopolize the CPU or corrupt shared state.
+</p>
+
+<hr />
+
+<h2>Final Thoughts</h2>
+
+<p>
+CPU scheduling and multithreading are not separate systems bolted together. They are complementary mechanisms
+that reinforce each other. Scheduling decides who gets to run and when. Synchronization ensures that when
+multiple things run at once, they do so safely.
+</p>
+
+<p>
+Together, they power everything from browsers and games to the large-scale servers that handle millions of
+requests every second, coordinating countless context switches all the while without the user ever noticing. 
+In my next blog I would cover Paging and Memory Allocation by the OS. Thanks a lot for reading so far!
+</p>
+
+</body>
+      <!-- ✏️ Keep adding sections until you're done. Delete the unused example elements above. -->
+
+    </article>
+
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">&copy; 2026 Bhanu Sohan Pingali</span>
+    <div class="footer-links">
+      <a href="https://github.com/P-Bhanu-Sohan" target="_blank">GitHub</a>
+      <a href="https://linkedin.com/in/bspingali" target="_blank">LinkedIn</a>
+      <a href="mailto:sohan.pingali@gmail.com">Email</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  var btn  = document.getElementById('themeBtn');
+  var dark = false;
+  btn.addEventListener('click', function () {
+    dark = !dark;
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    btn.textContent = dark ? '\u2600 light' : '\u263D dark';
+  });
+</script>
+
+</body>
+</html>
