@@ -530,6 +530,12 @@ If both read the balance at the same time before either has written its result, 
 up wrong. The system never catches the overdraft because each ATM was working from stale information.
 </p>
 
+<p>
+This happens because operations like updating a balance are not atomic at the CPU level. The hardware must 
+read the value from memory, modify it in a register, and write it back. If a context switch happens mid-process, 
+one thread will overwrite the changes made by the other.
+</p>
+
 <hr />
 
 <h2>Mutex</h2>
@@ -549,6 +555,12 @@ unlock(mutex);
 Any other thread that wants access must wait until the mutex is released before proceeding.
 </p>
 
+<p>
+An important rule of a mutex is ownership: only the specific thread that locks the mutex is allowed to unlock it. 
+However, introducing locks creates a risk of deadlocks. A deadlock occurs when Thread A holds Lock 1 and waits for 
+Lock 2, while Thread B holds Lock 2 and waits for Lock 1, freezing both threads forever.
+</p>
+
 <hr />
 
 <h2>Semaphore</h2>
@@ -564,6 +576,12 @@ When a car leaves, the count rises. A thread that arrives when the count is zero
 opens up.
 </p>
 
+<p>
+Unlike a mutex, a semaphore functions as a signaling mechanism rather than a lock, meaning it has no concept of 
+ownership - any thread can signal a semaphore to wake up a waiting thread. They rely on two fundamental atomic operations: 
+Wait (which decrements the counter and blocks the thread if the count is zero) and Signal (which increments the counter 
+and wakes up a sleeping thread).
+</p>
 <hr />
 
 <h2>Scheduling and Synchronization Working Together</h2>
