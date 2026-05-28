@@ -1,0 +1,466 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>An Introduction to Paging and Virtual Memory</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <!-- Apply saved theme immediately to prevent flash -->
+  <script>
+    (function() {
+      var t = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <style>
+    :root {
+      --bg:        #f7f5f2;
+      --surface:   #efecea;
+      --border:    #d8d4ce;
+      --text:      #1a1916;
+      --muted:     #7a766e;
+      --accent:    #2a4a7f;
+      --accent-lt: #dce6f5;
+      --tag-bg:    #e8e4df;
+      --tag-text:  #4a453e;
+      --link:      #2a4a7f;
+      --mono:      'DM Mono', monospace;
+      --serif:     'EB Garamond', Georgia, serif;
+      --radius:    4px;
+      --max:       680px;
+      --trans:     0.2s ease;
+    }
+    [data-theme="dark"] {
+      --bg:        #131210;
+      --surface:   #1d1b18;
+      --border:    #2e2b26;
+      --text:      #e8e4dc;
+      --muted:     #7a766e;
+      --accent:    #7aa2d4;
+      --accent-lt: #1a2536;
+      --tag-bg:    #242118;
+      --tag-text:  #b0aa9e;
+      --link:      #7aa2d4;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.7;
+      background: var(--bg);
+      color: var(--text);
+      transition: background var(--trans), color var(--trans);
+    }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Nav */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      transition: background var(--trans);
+    }
+    .nav-inner {
+      max-width: var(--max); margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between; height: 52px;
+    }
+    .nav-logo { font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; color: var(--text); }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a {
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+      color: var(--muted); text-transform: uppercase; transition: color var(--trans);
+    }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .theme-btn {
+      background: none; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 4px 10px; cursor: pointer; font-family: var(--mono); font-size: 11px;
+      color: var(--muted); letter-spacing: 0.04em;
+      transition: border-color var(--trans), color var(--trans);
+    }
+    .theme-btn:hover { color: var(--text); border-color: var(--muted); }
+
+    /* Layout */
+    .site-wrapper { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+
+    /* Back link */
+    .post-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted);
+      padding: 60px 0 0; margin-bottom: 0;
+      border: none; background: none; cursor: pointer;
+    }
+    .post-back:hover { color: var(--accent); text-decoration: none; }
+
+    /* Post header */
+    .post-header { padding: 28px 0 40px; border-bottom: 1px solid var(--border); }
+    .post-eyebrow {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+    }
+    .post-title {
+      font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 400;
+      line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 20px;
+    }
+    .post-title em { font-style: italic; color: var(--accent); }
+    .post-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+    .post-meta-item { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+    /* Post body */
+    .post-body { padding: 48px 0 80px; font-size: 1.05rem; line-height: 1.85; }
+    .post-body h2 { font-size: 1.5rem; margin: 40px 0 16px; font-weight: 400; }
+    .post-body h3 { font-size: 1.2rem; margin: 32px 0 12px; font-weight: 500; }
+    .post-body p  { margin-bottom: 20px; }
+    .post-body ul, .post-body ol { padding-left: 24px; margin-bottom: 20px; }
+    .post-body li { margin-bottom: 8px; }
+    .post-body a  { color: var(--accent); }
+    .post-body code {
+      font-family: var(--mono); font-size: 0.85em;
+      background: var(--surface); padding: 2px 6px; border-radius: 2px;
+    }
+    .post-body pre {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; overflow-x: auto; margin-bottom: 24px;
+    }
+    .post-body pre code { background: none; padding: 0; font-size: 0.9em; }
+    .post-body blockquote {
+      border-left: 3px solid var(--accent); padding-left: 20px;
+      color: var(--muted); font-style: italic; margin: 24px 0;
+    }
+    .post-body img {
+      width: 100%; margin: 28px 0; border-radius: var(--radius);
+      border: 1px solid var(--border); display: block;
+    }
+    .post-body .caption {
+      font-family: var(--mono); font-size: 11px; color: var(--muted);
+      text-align: center; margin-top: -20px; margin-bottom: 28px;
+    }
+
+    /* Footer */
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner {
+      max-width: var(--max); margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-copy { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .footer-links a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="../index.html">Bhanu Sohan Pingali</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../index.html#blog">Blog</a>
+      <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener">GitHub &#8599;</a>
+      <a href="https://linkedin.com/in/bspingali" target="_blank" rel="noopener">LinkedIn &#8599;</a>
+      <button class="theme-btn" id="themeBtn">&#9789; dark</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="site-wrapper">
+
+    <a class="post-back" href="../index.html?page=blog">← Back to blog</a>
+
+    <header class="post-header">
+      <p class="post-eyebrow">Blog &middot; May 27, 2026</p>
+      <h1 class="post-title">An Introduction to <em>Paging and Virtual Memory</em></h1>
+      <div class="post-meta">
+        <span class="post-meta-item">Bhanu Sohan Pingali</span>
+        <span class="post-meta-item">10 min read</span>
+      </div>
+    </header>
+
+    <article class="post-body">
+
+      <p>
+      In the last blog, we explored how the CPU scheduler decides which process runs and when. Sharing a single CPU across dozens of processes is a hard enough problem on its own. But there is another resource every process needs just as desperately: memory.
+      </p>
+
+      <p>This time, let's talk about how the operating system manages RAM.</p>
+
+      <hr />
+
+      <h2>The Problem with Sharing Memory</h2>
+
+      <p>
+      Imagine your desk has a fixed amount of space. You are working on several projects at once: a browser, a code editor, a music player. Each one needs room to spread out its papers. If two projects accidentally use the same spot on the desk, things go wrong fast. Papers get overwritten, calculations corrupt each other.
+      </p>
+
+      <p>
+      Early computers had exactly this problem. Programs had to be manually assigned fixed memory addresses, and if two programs shared a machine, the programmer had to make sure they never stepped on each other's toes. This was fragile and error-prone, and it made truly isolated execution nearly impossible.
+      </p>
+
+      <p>The operating system needed a smarter approach.</p>
+
+      <hr />
+
+      <h2>The Concept of Virtual Memory</h2>
+
+      <p>The key insight is simple: every process should think it has the entire memory space to itself.</p>
+
+      <p>
+      When your browser runs, it should not have to worry about where Spotify's data lives. It should just see a large, clean address space and use it freely. The operating system, working invisibly underneath, translates those addresses into real physical memory locations.
+      </p>
+
+      <p>This is called <strong>virtual memory</strong>.</p>
+
+      <p>
+      Each process gets its own virtual address space. The OS maintains a mapping between the virtual addresses a process uses and the physical addresses where that data actually lives in RAM. The process never touches real memory directly; it only ever talks to the OS's abstraction layer.
+      </p>
+
+      <p>
+      This buys the system three big things: isolation, so one process cannot accidentally read or write another's memory; flexibility, so the OS can scatter a process's data across non-contiguous physical memory without the process knowing or caring; and the illusion of more memory than actually exists. We will see how that last one works shortly.
+      </p>
+
+      <img src="../images/VRPhyMem.png" alt="Structural overview contrasting isolated Virtual Memory spaces mapped into fragmented Physical Memory frames" />
+      <p class="caption">Juggling multiple isolated virtual perspectives on top of one physical pool of RAM.</p>
+
+      <hr />
+
+      <h2>Pages and Frames: The Core Abstraction</h2>
+
+      <p>
+      So how does the OS implement this mapping in practice? The naive approach would be to track every individual byte, maintaining a translation for each one. But a modern process might touch gigabytes of memory. Storing a separate mapping entry for every single byte would consume more memory than the system has available, which defeats the purpose entirely.
+      </p>
+
+      <p>
+      The OS needs a unit of memory large enough to make the bookkeeping tractable, but small enough to avoid wasting too much space. That unit is the <strong>page</strong>.
+      </p>
+
+      <p>
+      Virtual memory is divided into <strong>pages</strong>, typically 4KB each. Physical memory is divided into <strong>frames</strong> of the same size. Instead of tracking individual bytes, the OS only needs one mapping entry per page, shrinking the table by a factor of 4096. The OS maps pages to frames, and that mapping lives in a data structure called a <strong>page table</strong>, one per process.
+      </p>
+
+      <p>
+      When a process accesses a virtual address, a piece of hardware called the <strong>Memory Management Unit (MMU)</strong> automatically consults the page table, finds the corresponding physical frame, and completes the access. This happens on every single memory reference, but it is fast enough that programs barely notice.
+      </p>
+
+      <blockquote>
+      Think of it like a library. The library has shelves numbered 1 to 1000 (physical frames). You have your own personal index of where you left things: "chapter 3 notes" on shelf 12, "reference material" on shelf 47. The catalog (the page table) maps your personal index to actual shelf numbers. You think in your own terms; the library handles the physical location.
+      </blockquote>
+
+      <p>
+      This also starts to hint at something worth keeping in mind: files on disk and pages in memory are not entirely separate worlds. When you open a document and start editing it, the OS is reading blocks from the file system and loading them into memory pages. The line between storage and RAM is thinner than it looks.
+      </p>
+
+      <hr />
+
+      <h2>How Address Translation Actually Works</h2>
+
+      <p>It helps to walk through what happens when a process reads from a virtual address, say <code>0x7fff_1234_5678</code>.</p>
+
+      <p>
+      The virtual address is split into two parts. The upper bits identify which page the address falls within. The lower 12 bits (for a 4KB page) are the <strong>offset</strong> within that page, meaning which byte within those 4096 bytes the process actually wants.
+      </p>
+
+      <p>
+      The MMU takes the page number, looks it up in the process's page table, and gets back the physical frame number. It then attaches the original 12-bit offset to the end, producing the final physical address, and the memory access proceeds.
+      </p>
+
+      <p>
+      The offset is what makes pages elegant. Because pages are power-of-two sizes, the offset bits stay completely unchanged between virtual and physical addresses. The MMU only has to replace the page number part; the math is just bit concatenation, which hardware does in a single clock cycle.
+      </p>
+
+      <img src="../images/TranslationAddress.png" alt="Diagram showing a virtual address split into a Page Number and an Offset, run through a translation table to yield a Physical Address" />
+      <p class="caption">The architectural pipeline of virtual-to-physical bit conversion.</p>
+
+      <hr />
+
+      <h2>Page Faults: Bringing Data In On Demand</h2>
+
+      <p>
+      The OS does not have to load an entire process into RAM at startup. It can begin with only a handful of pages loaded and bring in more on the fly as the program touches them. This is called <strong>demand paging</strong>.
+      </p>
+
+      <p>
+      When a process tries to access a virtual address whose page is not currently in physical memory, the hardware raises a <strong>page fault</strong>. The CPU stops what it is doing and hands control to the OS, which then finds the requested page on disk (in a reserved area called <strong>swap space</strong>), loads it into a free physical frame, updates the page table, and resumes the process as if nothing happened.
+      </p>
+
+      <p>The process never knew there was a gap. From its perspective, the memory was always there.</p>
+
+      <p>
+      This is how the illusion of more memory works. A process's virtual address space might span gigabytes while the system only has 8GB of physical RAM. Pages that are not currently needed just sit on disk, waiting. The OS pulls them in only when the program actually reaches for them.
+      </p>
+
+      <p>
+      It is worth noting that swap space lives in the file system. When the OS pages out memory to disk, it is writing to a special file or partition managed by the same underlying storage infrastructure that holds your documents and executables. Memory management and file systems are deeply intertwined, even if they appear separate from the outside.
+      </p>
+
+      <hr />
+
+      <h2>Page Replacement: The Hard Part</h2>
+
+      <p>
+      Physical RAM is finite. When a page fault occurs and no free frames are left, the OS has to pick an existing page to <strong>evict</strong>: write it back to disk and hand over the frame to the incoming page.
+      </p>
+
+      <p>
+      Choosing the wrong page to evict is costly. If the evicted page is needed again almost immediately, you get another page fault and another slow round trip to disk. Several strategies have been developed to avoid this.
+      </p>
+
+      <h3>FIFO (First In, First Out)</h3>
+      <p>
+      Evicts the page that has been in memory the longest. It is simple to implement, but not very smart: a page loaded at startup that gets used constantly will be thrown out just because it has been around a while.
+      </p>
+
+      <h3>LRU (Least Recently Used)</h3>
+      <p>
+      Evicts the page that has not been accessed for the longest time, on the reasoning that recently untouched pages are unlikely to be needed soon. LRU works well in practice, but it is expensive to implement precisely because the OS has to track exact access order on every memory reference.
+      </p>
+
+      <h3>Clock (Second Chance)</h3>
+      <p>
+      Is a practical middle ground. Pages sit in a circular list, each carrying a reference bit that gets set when the page is accessed. When the OS needs to evict, it sweeps around the clock: if a page's reference bit is 1, it clears the bit and moves on; if the bit is 0, that page gets evicted. Frequently used pages keep getting their bits reset before the clock hand reaches them, so they survive. Pages that nobody is accessing lose their chance quickly.
+      </p>
+
+      <hr />
+
+      <h2>Thrashing: When the System Fights Itself</h2>
+
+      <p>One of the most dramatic failure modes in memory management is <strong>thrashing</strong>.</p>
+
+      <p>
+      Picture too many processes running at once, each one needing more memory than the system can provide. The OS frantically swaps pages in and out, but almost immediately after loading a page, another process needs that frame, so the OS evicts it. Then the first process needs it back. The machine spends nearly all its time shuffling pages between RAM and disk, and almost none of it actually running programs.
+      </p>
+
+      <p>
+      CPU utilization tanks. The machine becomes sluggish or nearly unresponsive. If you have ever watched a computer with the disk light blinking constantly while nothing seems to happen on screen, you have seen thrashing in action.
+      </p>
+
+      <p>
+      The fix is usually to reduce the number of competing processes, either by suspending some entirely or by the OS enforcing stricter limits on how much memory each process is allowed to hold at once. Modern systems try to catch this early before it spirals.
+      </p>
+
+      <img src="../images/Thrashing.png" alt="Graph showcasing a sharp cliff where CPU execution throughput collapses as a result of heavy page swapping" />
+      <p class="caption">The tipping point of thrashing: system performance consumed entirely by disk swap overhead.</p>
+
+      <hr />
+
+      <h2>Segmentation vs. Paging</h2>
+
+      <p>Before paging became the standard, an older model called <strong>segmentation</strong> was widely used.</p>
+
+      <p>
+      In segmentation, memory is divided into variable-length <strong>segments</strong>: one for code, one for the stack, one for the heap, and so on. Each segment has a base address and a length, and the OS enforces that every access stays within bounds. Segmentation maps naturally to how programmers think about their programs, with code clearly separated from data and the stack growing independently from the heap.
+      </p>
+
+      <p>
+      But segmentation creates a nasty problem over time called <strong>external fragmentation</strong>. As segments get allocated and freed, physical memory ends up looking like Swiss cheese: lots of small gaps between occupied regions. You might have 200MB of free memory and still be unable to fit a 150MB segment because the free space is scattered in pieces rather than contiguous.
+      </p>
+
+      <img src="../images/SwissCheese.png" alt="A breakdown showing fragments of occupied memory scattered across the physical layout, mimicking holes in a block of Swiss cheese" />
+      <p class="caption">External Fragmentation: Memory gets riddled with gaps that are individually too small to be useful.</p>
+
+      <p>
+      Paging avoids this entirely by working with fixed-size units. Every free frame is exactly the right size for exactly one page, with no awkward gaps. The tradeoff is <strong>internal fragmentation</strong>: the last page of any region might only be partially filled, but this waste is bounded and predictable, which is much easier to reason about.
+      </p>
+
+      <p>
+      Modern systems often combine both ideas, a technique called <strong>segmented paging</strong>: segments define broad logical regions like code, stack, and heap, with paging handling the fine-grained allocation within each one.
+      </p>
+
+      <hr />
+
+      <h2>TLB: Making Translation Fast</h2>
+
+      <p>
+      Address translation happens on every single memory access. Without hardware help, consulting the page table each time would make programs two or three times slower.
+      </p>
+
+      <p>
+      The <strong>Translation Lookaside Buffer (TLB)</strong> is a small, extremely fast cache built into the CPU that stores recent virtual-to-physical translations. When the CPU needs to translate an address, it checks the TLB first. A hit means an immediate physical address with no page table lookup at all. A miss means the CPU walks the page table, performs the translation, and stores the result in the TLB for next time.
+      </p>
+
+      <p>
+      This works well because most programs have <strong>locality of reference</strong>: they tend to access the same memory regions repeatedly in short windows of time. TLB hit rates are usually above 99%, which makes the overhead of translation nearly invisible in practice.
+      </p>
+
+      <p>
+      When a context switch happens and a new process takes the CPU, the TLB has to be flushed or tagged with a process identifier, because all those cached translations belong to the previous process and are meaningless to the new one. This is part of why context switching is not entirely free, which connects back to what we covered in the scheduling blog.
+      </p>
+
+      <hr />
+
+      <h2>Memory-Mapped Files: Where RAM Meets the File System</h2>
+
+      <p>
+      One of the more elegant applications of virtual memory is <strong>memory-mapped files</strong>, and this is where the connection between memory management and the file system becomes very concrete.
+      </p>
+
+      <p>
+      Normally, reading a file means making system calls: open the file, call <code>read()</code>, copy data into a buffer, close the file. With memory mapping, a process can instead ask the OS to map a file directly into its virtual address space. The file's contents appear as ordinary memory: reading from a virtual address reads the file, and writing to it modifies the file. No explicit <code>read()</code> or <code>write()</code> calls are needed. The OS handles loading pages from the file system on demand and flushing changes back to disk in the background, using the same page fault mechanism we already discussed.
+      </p>
+
+      <p>
+      This is how many programs load shared libraries. The C standard library, for example, gets mapped into the virtual address space of every process that uses it. Each process sees the library at its own virtual address, but only one copy of the library's pages lives in physical RAM at any given time, shared across all of them. The file system provides the backing store; virtual memory provides the sharing.
+      </p>
+
+      <p>
+      A page fault, then, is not always about swap space. When you open a large log file and your program reads through it, each section gets pulled into RAM as a page on demand. If memory runs tight, those file-backed pages can be evicted without writing anything to swap, because the original data is already sitting safely on disk, so the OS simply discards the page and knows it can reload from the file if needed again.
+      </p>
+
+      <hr />
+
+      <h2>Final Thoughts</h2>
+
+      <p>
+      Virtual memory is one of the more satisfying abstractions in operating systems. Every process gets what feels like a vast, private, contiguous address space. In reality, the OS is juggling fragmented physical RAM, consulting page tables on every access, swapping pages in from disk when needed, sharing library code across dozens of processes, and keeping a warm page cache full of recently touched file data.
+      </p>
+
+      <p>None of that complexity leaks out to the programs running on top.</p>
+
+      <p>
+      In the next blog, we will look at how the OS manages persistent storage: how file systems are structured, how data survives a reboot, and what actually happens when you hit save. Thanks for reading along.
+      </p>
+
+    </article>
+
+    <footer>
+      <div class="footer-inner">
+        <p class="footer-copy">&copy; 2026 Bhanu Sohan Pingali</p>
+        <div class="footer-links">
+          <a href="../index.html">Home</a>
+          <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://linkedin.com/in/bspingali" target="_blank" rel="noopener">LinkedIn</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('themeBtn');
+    
+    // Sync button label to whatever theme is already active (set in <head>)
+    function syncBtn() {
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      btn.textContent = isDark ? '\u2600 light' : '\u263D dark';
+    }
+    syncBtn();
+    
+    btn.addEventListener('click', function () {
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      var next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      syncBtn();
+    });
+  });
+</script>
+</body>
+</html>

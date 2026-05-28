@@ -10,6 +10,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <!-- Apply saved theme immediately to prevent flash -->
+  <script>
+    (function() {
+      var t = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <style>
     :root {
       --bg:        #f7f5f2;
@@ -166,7 +173,7 @@
 <main>
   <div class="site-wrapper">
 
-    <a class="post-back" href="../index.html#blog">← Back to blog</a>
+    <a class="post-back" href="../index.html?page=blog">← Back to blog</a>
 
     <header class="post-header">
 
@@ -614,12 +621,23 @@ In my next blog I would cover Paging and Memory Allocation by the OS. Thanks a l
 </footer>
 
 <script>
-  var btn  = document.getElementById('themeBtn');
-  var dark = false;
-  btn.addEventListener('click', function () {
-    dark = !dark;
-    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-    btn.textContent = dark ? '\u2600 light' : '\u263D dark';
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn  = document.getElementById('themeBtn');
+    
+    // Sync button label to whatever theme is already active (set in <head>)
+    function syncBtn() {
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      btn.textContent = isDark ? '\u2600 light' : '\u263D dark';
+    }
+    syncBtn();
+    
+    btn.addEventListener('click', function () {
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      var next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      syncBtn();
+    });
   });
 </script>
 

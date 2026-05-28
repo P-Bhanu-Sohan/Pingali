@@ -7,6 +7,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <!-- Apply saved theme immediately to prevent flash -->
+  <script>
+    (function() {
+      var t = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <style>
     :root {
       --bg:        #f7f5f2;
@@ -352,35 +359,16 @@
       <section class="section">
         <p class="section-label">All Posts</p>
         <div class="blog-post-list">
-
-          <!--
-          ============================================================
-          ✏️ HOW TO ADD A NEW POST:
-
-          1. Duplicate blog-post-template.html, rename it (e.g. blog/my-new-post.html)
-          2. Fill in your content in that file
-          3. Copy the block below, update the date, title, href, and excerpt
-          4. Re-upload the whole folder to Netlify
-          ============================================================
-
-          TEMPLATE TO COPY FOR EACH NEW POST:
-
-          <div class="blog-post">
-            <p class="blog-date">Month DD, YYYY</p>
-            <h3 class="blog-title"><a href="blog/your-post-filename.html">Your Post Title</a></h3>
-            <p class="blog-excerpt">One sentence summary of the post.</p>
-          </div>
-
-          ============================================================
-          -->
-
-          <!-- ✏️ EXISTING POST — update href if you rename the file -->
           <div class="blog-post">
             <p class="blog-date">May 20, 2026</p>
             <h3 class="blog-title"><a href="blog/cpu-scheduling.html">An Introduction to CPU Scheduling and Multithreading</a></h3>
             <p class="blog-excerpt">This blog covers the basics of schedulers and introduces ideas of multithreading and concurrency to the reader</p>
           </div>
-
+          <div class="blog-post">
+            <p class="blog-date">May 27, 2026</p>
+            <h3 class="blog-title"><a href="blog/paging.html">An Introduction to Paging and Virtual Memory</a></h3>
+            <p class="blog-excerpt">This blog covers the basics of Virtual Memory and Paging and explains the need for such an abstraction across processes</p>
+          </div>
         </div>
       </section>
 
@@ -403,29 +391,42 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
 
-    /* Page switching */
+    /* ── Theme ── */
+    var btn = document.getElementById('themeBtn');
+    // Sync button label to whatever theme is already active (set in <head>)
+    function syncBtn() {
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      btn.textContent = isDark ? '\u2600 light' : '\u263D dark';
+    }
+    syncBtn();
+    btn.addEventListener('click', function () {
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      var next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      syncBtn();
+    });
+
+    /* ── Page switching ── */
     function showPage(name) {
-      document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-      var t = document.getElementById('page-' + name);
-      if (t) t.classList.add('active');
+      document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
+      var target = document.getElementById('page-' + name);
+      if (target) target.classList.add('active');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    document.querySelectorAll('[data-page]').forEach(function(el) {
-      el.addEventListener('click', function(e) {
+    document.querySelectorAll('[data-page]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
         e.preventDefault();
         showPage(el.getAttribute('data-page'));
       });
     });
 
-    /* Theme toggle */
-    var btn  = document.getElementById('themeBtn');
-    var dark = false;
-    btn.addEventListener('click', function() {
-      dark = !dark;
-      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-      btn.textContent = dark ? '\u2600 light' : '\u263D dark';
-    });
+    // Support ?page=blog so blog posts can link back to the blog list
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('page') === 'blog') {
+      showPage('blog');
+    }
 
   });
 </script>
