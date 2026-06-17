@@ -332,14 +332,14 @@ ON users(email);</code></pre>
 
       <hr />
 
-      <h2>B-Trees: The Data Structure Behind Most Indexes</h2>
+      <h2>B+Trees: The Data Structure Behind Most Indexes</h2>
 
       <p>
       You might wonder why the index is not just a sorted list. A sorted list is great for binary search in memory, but terrible on disk. Binary search on a list of ten million items takes about 23 steps. Each step is a random jump to a different position in the list. If each position is on a different disk page, that is 23 separate disk reads, each costing hundreds of microseconds. We can do much better.
       </p>
 
       <p>
-      The answer is the <strong>B-Tree</strong> (Balanced Tree). A B-Tree is designed specifically for the economics of disk access. Instead of each node having two children like a binary search tree, a B-Tree node holds dozens or hundreds of keys and has a corresponding number of children. This is called a high <strong>branching factor</strong>.
+      The answer is the <strong>B+Tree</strong>. A B+Tree is designed specifically for the economics of disk access. Instead of each node having two children like a binary search tree, a B+Tree node holds dozens or hundreds of keys and has a corresponding number of children. This is called a high <strong>branching factor</strong>.
       </p>
 
       <p>
@@ -352,11 +352,11 @@ ON users(email);</code></pre>
               |                         |
            [row ptrs]              [row ptrs]</code></pre>
 
-      <img src="../images/btree-index.png" alt="B-Tree Index Structure Diagram" />
-      <p class="caption">Figure 2. A B-Tree index has a high branching factor, keeping the tree shallow and minimizing page reads per lookup.</p>
+      <img src="../images/btree-index.png" alt="B+Tree Index Structure Diagram" />
+      <p class="caption">Figure 2. A B+Tree index has a high branching factor, keeping the tree shallow and minimizing page reads per lookup.</p>
 
       <p>
-      B-Trees also handle range queries naturally. Because keys are sorted within each node, finding all users whose email starts with "alice" is just a matter of walking a contiguous range of leaf nodes. A hash index, which maps each key to a bucket, would be faster for exact lookups but cannot handle ranges at all. That is why B-Trees dominate general-purpose relational databases, while hash indexes appear as a specialized option for exact-match workloads.
+      B+Trees also handle range queries naturally. Because keys are sorted within each node, finding all users whose email starts with "alice" is just a matter of walking a contiguous range of leaf nodes. A hash index, which maps each key to a bucket, would be faster for exact lookups but cannot handle ranges at all. That is why B+Trees dominate general-purpose relational databases, while hash indexes appear as a specialized option for exact-match workloads.
       </p>
 
       <hr />
@@ -368,11 +368,11 @@ ON users(email);</code></pre>
       </p>
 
       <p>
-      A <strong>clustered index</strong>, which is called a primary key index in most databases, does not just point to the row; it <em>is</em> the row. The table's actual data is physically stored in the same B-Tree, sorted by the primary key. In InnoDB, which is MySQL's engine, the table and the clustered index are the same structure. Looking up a user by their ID is a single tree traversal that lands directly on the full row data.
+        A clustered index stores the table's data directly within the index structure itself. Rather than pointing to rows elsewhere, the leaf nodes contain the actual row data, physically organized by the indexed key.
       </p>
 
       <p>
-      A <strong>secondary index</strong>, like our <code>idx_email</code>, is a separate B-Tree that holds the indexed column and a pointer back to the primary key. To fetch the full row, the database first traverses the secondary index to get the primary key value, then traverses the clustered index with that value to retrieve the actual row. That is two tree lookups instead of one. For queries that touch many rows, this double-lookup cost adds up.
+      A <strong>secondary index</strong>, like our <code>idx_email</code>, is a separate B+Tree that holds the indexed column and a pointer back to the primary key. To fetch the full row, the database first traverses the secondary index to get the primary key value, then traverses the clustered index with that value to retrieve the actual row. That is two tree lookups instead of one. For queries that touch many rows, this double-lookup cost adds up.
       </p>
 
       <img src="../images/clustered-vs-secondary.png" alt="Clustered vs Secondary Index Diagram" />
@@ -552,29 +552,30 @@ return user</code></pre>
       </p>
 
       <div class="flow-block">
-        <div class="flow-step"><span class="flow-num">1.</span><span class="flow-label">Query arrives at the database:</span></div>
-        <div class="flow-note"><code>SELECT * FROM users WHERE email = 'alice@gmail.com'</code></div>
-        <div class="flow-step"><span class="flow-num">2.</span><span class="flow-label">Query optimizer evaluates available indexes</span></div>
-        <div class="flow-note">Finds <code>idx_email</code> and estimates cost of index scan vs. sequential scan</div>
-        <div class="flow-step"><span class="flow-num">3.</span><span class="flow-label">Query plan selected: Index Scan</span></div>
-        <div class="flow-note">Optimizer chooses the index because <code>email</code> is high-cardinality</div>
-        <div class="flow-step"><span class="flow-num">4.</span><span class="flow-label">B-Tree traversal begins</span></div>
-        <div class="flow-note">Root page → internal nodes → leaf node: 3 or 4 page reads total</div>
-        <div class="flow-step"><span class="flow-num">5.</span><span class="flow-label">Row located and returned to application</span></div>
-        <div class="flow-step"><span class="flow-num">6.</span><span class="flow-label">Application checks Redis cache</span></div>
-        <div class="flow-note"><code>redis.get("user:42")</code></div>
-        <div class="flow-step"><span class="flow-num">7.</span><span class="flow-label">Cache miss this time, which means the database was queried</span></div>
-        <div class="flow-step"><span class="flow-num">8.</span><span class="flow-label">Result returned to the user</span></div>
-        <div class="flow-step"><span class="flow-num">9.</span><span class="flow-label">Result stored in Redis with a TTL</span></div>
-        <div class="flow-note">Next login request for Alice hits the cache, and the database is never involved</div>
-      </div>
+          <div class="flow-step"><span class="flow-num">1.</span><span class="flow-label">Application checks Redis cache</span></div>
+          <div class="flow-note"><code>redis.get("user:42")</code></div>
+          <div class="flow-step"><span class="flow-num">2.</span><span class="flow-label">Cache miss, so the database is queried</span></div>
+          <div class="flow-step"><span class="flow-num">3.</span><span class="flow-label">Query arrives at the database:</span></div>
+          <div class="flow-note"><code>SELECT * FROM users WHERE email = 'alice@gmail.com'</code></div>
+          <div class="flow-step"><span class="flow-num">4.</span><span class="flow-label">Query optimizer evaluates available indexes</span></div>
+          <div class="flow-note">Finds <code>idx_email</code> and estimates cost of index scan vs. sequential scan</div>
+          <div class="flow-step"><span class="flow-num">5.</span><span class="flow-label">Query plan selected: Index Scan</span></div>
+          <div class="flow-note">Optimizer chooses the index because <code>email</code> is high-cardinality</div>
+          <div class="flow-step"><span class="flow-num">6.</span><span class="flow-label">B+Tree traversal begins</span></div>
+          <div class="flow-note">Root page -> internal nodes -> leaf node: 3 or 4 page reads total</div>
+          <div class="flow-step"><span class="flow-num">7.</span><span class="flow-label">Row located and returned to application</span></div>
+          <div class="flow-step"><span class="flow-num">8.</span><span class="flow-label">Result returned to the user</span></div>
+          <div class="flow-step"><span class="flow-num">9.</span><span class="flow-label">Result stored in Redis with a TTL</span></div>
+          <div class="flow-note">Next login request for Alice hits the cache, and the database is never involved</div>
+        </div>
+
 
       <p>
       The entire thing, including index traversal, row fetch, and cache write, takes a few milliseconds end to end. The same query without the index would have taken seconds. Without the cache layer, the database would feel that full cost on every single login across every user simultaneously.
       </p>
 
       <img src="../images/end-to-end-query.png" alt="End-to-End Query Journey Diagram" />
-      <p class="caption">Figure 6. The full query journey: optimizer selects a plan, B-Tree traversal locates the row, and the result is cached for future requests.</p>
+      <p class="caption">Figure 6. The full query journey: optimizer selects a plan, B+Tree traversal locates the row, and the result is cached for future requests.</p>
 
       <hr />
 
@@ -584,7 +585,7 @@ return user</code></pre>
         <li>Full table scans read every row; performance degrades linearly with table size. They do not scale.</li>
         <li>Databases optimize for minimizing disk page reads, not row reads.</li>
         <li>An index is a separate sorted data structure that maps column values to row locations, eliminating scans.</li>
-        <li>B-Trees power most relational database indexes because their high branching factor keeps trees shallow and limits page reads to a handful per lookup.</li>
+        <li>B+Trees power most relational database indexes because their high branching factor keeps trees shallow and limits page reads to a handful per lookup.</li>
         <li>Clustered indexes store data in the tree itself; secondary indexes store pointers and require a second lookup.</li>
         <li><code>EXPLAIN</code> reveals whether a query uses an index or a full scan and estimates its cost.</li>
         <li>Indexes and caches solve different problems: indexes find data efficiently; caches avoid repeated database trips entirely.</li>
@@ -616,7 +617,7 @@ Entire queries become efficient at scale</code></pre>
     </p>
 
     <p>
-    When queries involve joining multiple tables, filtering by ranges, and aggregating data all at once, a single B-Tree index isn't enough. The database can't just jump to a single page; it has to orchestrate a complex dance of sorting, filtering, and merging data streams in memory. 
+    When queries involve joining multiple tables, filtering by ranges, and aggregating data all at once, a single B+Tree index isn't enough. The database can't just jump to a single page; it has to orchestrate a complex dance of sorting, filtering, and merging data streams in memory. 
     </p>
 
     <p>
