@@ -1,0 +1,654 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Database Indexing & Caching — How Databases Find Your Data</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <script>
+    (function() {
+      var t = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <style>
+    :root {
+      --bg:        #f7f5f2;
+      --surface:   #efecea;
+      --border:    #d8d4ce;
+      --text:      #1a1916;
+      --muted:     #7a766e;
+      --accent:    #2a4a7f;
+      --accent-lt: #dce6f5;
+      --tag-bg:    #e8e4df;
+      --tag-text:  #4a453e;
+      --link:      #2a4a7f;
+      --mono:      'DM Mono', monospace;
+      --serif:     'EB Garamond', Georgia, serif;
+      --radius:    4px;
+      --max:       680px;
+      --trans:     0.2s ease;
+    }
+    [data-theme="dark"] {
+      --bg:        #131210;
+      --surface:   #1d1b18;
+      --border:    #2e2b26;
+      --text:      #e8e4dc;
+      --muted:     #7a766e;
+      --accent:    #7aa2d4;
+      --accent-lt: #1a2536;
+      --tag-bg:    #242118;
+      --tag-text:  #b0aa9e;
+      --link:      #7aa2d4;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.7;
+      background: var(--bg);
+      color: var(--text);
+      transition: background var(--trans), color var(--trans);
+    }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      transition: background var(--trans);
+    }
+    .nav-inner {
+      max-width: var(--max); margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between; height: 52px;
+    }
+    .nav-logo { font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; color: var(--text); }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a {
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+      color: var(--muted); text-transform: uppercase; transition: color var(--trans);
+    }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .theme-btn {
+      background: none; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 4px 10px; cursor: pointer; font-family: var(--mono); font-size: 11px;
+      color: var(--muted); letter-spacing: 0.04em;
+      transition: border-color var(--trans), color var(--trans);
+    }
+    .theme-btn:hover { color: var(--text); border-color: var(--muted); }
+
+    .site-wrapper { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+
+    .post-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted);
+      padding: 60px 0 0; margin-bottom: 0;
+      border: none; background: none; cursor: pointer;
+    }
+    .post-back:hover { color: var(--accent); text-decoration: none; }
+
+    .post-header { padding: 28px 0 40px; border-bottom: 1px solid var(--border); }
+    .post-eyebrow {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+    }
+    .post-title {
+      font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 400;
+      line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 20px;
+    }
+    .post-title em { font-style: italic; color: var(--accent); }
+    .post-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+    .post-meta-item { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+    .post-body { padding: 48px 0 80px; font-size: 1.05rem; line-height: 1.85; }
+    .post-body h2 { font-size: 1.5rem; margin: 40px 0 16px; font-weight: 400; }
+    .post-body h3 { font-size: 1.2rem; margin: 32px 0 12px; font-weight: 500; }
+    .post-body p  { margin-bottom: 20px; }
+    .post-body ul, .post-body ol { padding-left: 24px; margin-bottom: 20px; }
+    .post-body li { margin-bottom: 8px; }
+    .post-body a  { color: var(--accent); }
+    .post-body code {
+      font-family: var(--mono); font-size: 0.85em;
+      background: var(--surface); padding: 2px 6px; border-radius: 2px;
+    }
+    .post-body pre {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; overflow-x: auto; margin-bottom: 24px;
+    }
+    .post-body pre code { background: none; padding: 0; font-size: 0.9em; }
+    .post-body blockquote {
+      border-left: 3px solid var(--accent); padding-left: 20px;
+      color: var(--muted); font-style: italic; margin: 24px 0;
+    }
+    .post-body img {
+      width: 100%; margin: 28px 0; border-radius: var(--radius);
+      border: 1px solid var(--border); display: block;
+    }
+    .post-body .caption {
+      font-family: var(--mono); font-size: 11px; color: var(--muted);
+      text-align: center; margin-top: -20px; margin-bottom: 28px;
+    }
+
+    /* Comparison table */
+    .compare-table {
+      width: 100%; border-collapse: collapse; margin: 24px 0 28px;
+      font-family: var(--mono); font-size: 0.82em;
+    }
+    .compare-table th {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 10px 14px; text-align: left; font-weight: 400;
+      letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.78em; color: var(--muted);
+    }
+    .compare-table td {
+      border: 1px solid var(--border); padding: 10px 14px; color: var(--text);
+      vertical-align: top;
+    }
+    .compare-table tr:nth-child(even) td { background: var(--surface); }
+
+    /* Flow diagram blocks */
+    .flow-block {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 24px; margin: 24px 0;
+      font-family: var(--mono); font-size: 0.88em; line-height: 2;
+    }
+    .flow-block .flow-step {
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .flow-block .flow-num {
+      color: var(--muted); min-width: 20px; padding-top: 1px;
+    }
+    .flow-block .flow-arrow {
+      color: var(--muted); text-align: center; padding-left: 8px;
+      font-size: 0.9em;
+    }
+    .flow-block .flow-label { color: var(--text); }
+    .flow-block .flow-note { color: var(--muted); font-size: 0.85em; padding-left: 32px; }
+
+    /* Series nav */
+    .series-nav {
+      margin: 40px 0 0;
+      padding: 20px 24px;
+      background: var(--accent-lt);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .series-nav p {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 8px !important;
+    }
+    .series-nav a {
+      font-size: 0.95rem; font-family: var(--serif); color: var(--accent);
+    }
+
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner {
+      max-width: var(--max); margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-copy { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .footer-links a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="../index.html">Bhanu Sohan Pingali</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../index.html?page=blog">Blog</a>
+      <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener">GitHub &#8599;</a>
+      <a href="https://linkedin.com/in/bspingali" target="_blank" rel="noopener">LinkedIn &#8599;</a>
+      <button class="theme-btn" id="themeBtn">&#9789; dark</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="site-wrapper">
+
+    <a class="post-back" href="../index.html?page=blog">← Back to blog</a>
+
+    <header class="post-header">
+      <p class="post-eyebrow">Blog &middot; June 17, 2026</p>
+      <h1 class="post-title">How Databases Find Your Data in <em>Milliseconds</em></h1>
+      <div class="post-meta">
+        <span class="post-meta-item">Bhanu Sohan Pingali</span>
+        <span class="post-meta-item">Part 1: Indexing &amp; Caching</span>
+        <span class="post-meta-item">12 min read</span>
+      </div>
+    </header>
+
+    <article class="post-body">
+
+      <p>
+      In the last blog, we watched the file system do heroic work: turning a chaotic scatter of magnetic domains into a clean, navigable hierarchy of files and folders. By the end, we left a natural question hanging in the air. If the file system is already doing so much, like grouping related data, journaling writes, and caching hot pages, why do databases exist at all? Why not just dump your users into a text file and be done with it?
+      </p>
+
+      <p>
+      The answer is that a file system is brilliant at one thing: storing data. Databases are built to solve a different problem entirely: <em>finding</em> it. Specifically, finding a handful of rows among millions in a fraction of a second. That constraint, "give me exactly these few records, right now, from a sea of data," is what drives almost every decision in database internals. Today we follow that constraint to its logical conclusions.
+      </p>
+
+      <hr />
+
+      <h2>Why Queries Go Slow</h2>
+
+      <p>
+      Imagine you have a <code>users</code> table with ten million rows. A new user tries to log in, and your application fires off this query:
+      </p>
+
+<pre><code>SELECT *
+FROM users
+WHERE email = 'alice@gmail.com';</code></pre>
+
+      <p>
+      Without any special machinery, the database has no idea where Alice lives in that table. It cannot guess. So it does the only safe thing it can: it reads every single row, from the first to the last, checking each email address one by one. This is called a <strong>full table scan</strong>, and it is exactly as painful as it sounds.
+      </p>
+
+      <p>
+      On ten million rows, a full table scan might take several seconds. Your login page just hung for several seconds. Now imagine a hundred users trying to log in at the same time. The database is now reading the entire table a hundred times over, simultaneously. Performance does not just degrade; it collapses.
+      </p>
+
+      <p>
+      And here is the cruel part: the more successful your product becomes, the worse this gets. At ten thousand users, things feel fast. At a million, queries start to drag. At ten million, the database is on its knees. The query did not get worse. The table just got bigger, and a full scan scales linearly with it.
+      </p>
+
+      <img src="../images/full-table-scan.png" alt="Full Table Scan vs Index Scan Diagram" />
+      <p class="caption">Figure 1. A full table scan reads every row sequentially; an index lookup jumps directly to the target rows.</p>
+
+      <hr />
+
+      <h2>Disk I/O: The Real Bottleneck</h2>
+
+      <p>
+      We established in the last blog that disk access is devastatingly slow compared to everything else in a computer. Let's put some sharper numbers to it. A CPU can execute a billion instructions per second. Reading a byte from RAM takes around 100 nanoseconds. A random read from an SSD takes roughly 100 microseconds, which is a thousand times slower. A random read from a spinning hard drive can take 10 milliseconds, which is a hundred thousand times slower than RAM.
+      </p>
+
+      <p>
+      Every time a database needs a row that is not already in memory, it pays one of those prices. A full table scan on a large table does not pay that price once; it pays it thousands of times, once for every chunk of data it reads from storage. The gap between "finds it in one disk read" and "reads the entire table" is the gap between a sub-millisecond response and a multi-second hang. Everything in database design, from the data structures and caching layers to the query planner, is fundamentally an attempt to minimize how often and how far into storage you have to reach.
+      </p>
+
+      <hr />
+
+      <h2>Database Pages: The Unit of Work</h2>
+
+      <p>
+      Databases do not read individual rows from disk. They read <strong>pages</strong>. A page is a fixed-size chunk of data, typically 8 kilobytes in PostgreSQL and 16 kilobytes in MySQL, and it maps directly onto the concept of a block that we covered in the file system blog. When the database needs any row, it loads the entire page that row lives on.
+      </p>
+
+      <p>
+      This is not waste; it is strategy. If you are reading row 5,000 of a table, there is a very good chance you will want row 5,001 next. Loading them together in one page means the second read is free. The file system exploited spatial locality in exactly the same way, and the database borrows the same intuition.
+      </p>
+
+<pre><code>Filesystem
+    ↓
+Blocks (4 KB – 8 KB on disk)
+
+Database
+    ↓
+Pages (8 KB – 16 KB logical)
+    ↓
+Rows (variable size, packed into pages)</code></pre>
+
+      <p>
+      The key insight is that the cost model for a database query is not "how many rows did we touch?" It is "how many pages did we have to load from disk?" A query that touches one million rows spread across one million pages is catastrophically expensive. A query that touches one million rows all packed into a handful of pages is much cheaper. Database designers think in pages almost exclusively.
+      </p>
+
+      <hr />
+
+      <h2>What an Index Actually Is</h2>
+
+      <p>
+      Think about how a textbook index works. Instead of reading every page to find mentions of "binary search," you flip to the back, look up B, and find "binary search, pages 142, 207, 391." Three seconds instead of three hours. A database index is the same idea applied to rows.
+      </p>
+
+      <p>
+      An index is a separate data structure that the database maintains alongside your table. It holds a sorted copy of one or more columns, and for each value, a pointer to the exact page and row where that data lives. When you query by an indexed column, the database consults the index first, gets a precise location, and loads just that page from the main table. No scanning. No guessing.
+      </p>
+
+      <p>
+      Creating one is a single SQL statement:
+      </p>
+
+<pre><code>CREATE INDEX idx_email
+ON users(email);</code></pre>
+
+      <p>
+      After this, that same login query does not read ten million rows anymore. It walks the index, finds Alice's location in microseconds, and loads a single page. The query time drops from seconds to milliseconds. The table did not change; you just gave the database a map.
+      </p>
+
+      <p>
+      The trade-off is worth knowing: indexes are not free. Every write to the table, meaning every INSERT, UPDATE, and DELETE, also has to update every index on that table. A table with ten indexes pays ten index-update costs on every write. For read-heavy workloads, that is a wonderful trade. For write-heavy ones, you add indexes carefully.
+      </p>
+
+      <hr />
+
+      <h2>B-Trees: The Data Structure Behind Most Indexes</h2>
+
+      <p>
+      You might wonder why the index is not just a sorted list. A sorted list is great for binary search in memory, but terrible on disk. Binary search on a list of ten million items takes about 23 steps. Each step is a random jump to a different position in the list. If each position is on a different disk page, that is 23 separate disk reads, each costing hundreds of microseconds. We can do much better.
+      </p>
+
+      <p>
+      The answer is the <strong>B-Tree</strong> (Balanced Tree). A B-Tree is designed specifically for the economics of disk access. Instead of each node having two children like a binary search tree, a B-Tree node holds dozens or hundreds of keys and has a corresponding number of children. This is called a high <strong>branching factor</strong>.
+      </p>
+
+      <p>
+      The result is a very short, very wide tree. An index over ten million rows might only be three or four levels deep. To find any row, you read three or four pages: the root, an internal node, maybe another internal node, and the leaf. Four disk reads instead of twenty-three, and on a busy database, the top levels of the tree are almost always cached in memory, meaning the real cost is often just one or two disk reads to reach the leaf.
+      </p>
+
+<pre><code>                    [20 | 40 | 60]
+                   /    |    |    \
+           [5|12|18] [25|32] [45|55] [65|80|95]
+              |                         |
+           [row ptrs]              [row ptrs]</code></pre>
+
+      <img src="../images/btree-index.png" alt="B-Tree Index Structure Diagram" />
+      <p class="caption">Figure 2. A B-Tree index has a high branching factor, keeping the tree shallow and minimizing page reads per lookup.</p>
+
+      <p>
+      B-Trees also handle range queries naturally. Because keys are sorted within each node, finding all users whose email starts with "alice" is just a matter of walking a contiguous range of leaf nodes. A hash index, which maps each key to a bucket, would be faster for exact lookups but cannot handle ranges at all. That is why B-Trees dominate general-purpose relational databases, while hash indexes appear as a specialized option for exact-match workloads.
+      </p>
+
+      <hr />
+
+      <h2>Clustered vs. Secondary Indexes</h2>
+
+      <p>
+      There are two fundamentally different flavors of index, and the distinction matters for performance.
+      </p>
+
+      <p>
+      A <strong>clustered index</strong>, which is called a primary key index in most databases, does not just point to the row; it <em>is</em> the row. The table's actual data is physically stored in the same B-Tree, sorted by the primary key. In InnoDB, which is MySQL's engine, the table and the clustered index are the same structure. Looking up a user by their ID is a single tree traversal that lands directly on the full row data.
+      </p>
+
+      <p>
+      A <strong>secondary index</strong>, like our <code>idx_email</code>, is a separate B-Tree that holds the indexed column and a pointer back to the primary key. To fetch the full row, the database first traverses the secondary index to get the primary key value, then traverses the clustered index with that value to retrieve the actual row. That is two tree lookups instead of one. For queries that touch many rows, this double-lookup cost adds up.
+      </p>
+
+      <img src="../images/clustered-vs-secondary.png" alt="Clustered vs Secondary Index Diagram" />
+      <p class="caption">Figure 3. A clustered index stores data alongside the index; a secondary index stores pointers back to the primary key, requiring a second lookup.</p>
+
+      <p>
+      Databases have an optimization for this: the covering index. If all the columns a query needs are present in the secondary index itself, the database never has to touch the main table at all. A query like <code>SELECT email FROM users WHERE email = 'alice@gmail.com'</code> can be satisfied entirely from the index on <code>email</code>. The data is right there in the leaf node. This is sometimes called an index-only scan, and for the right queries, it is extremely fast.
+      </p>
+
+      <hr />
+
+      <h2>How Does the Database Choose an Index?</h2>
+
+      <p>
+      A real table might have a dozen indexes. When a query arrives, the database does not just grab the first one it sees. It runs a component called the <strong>query optimizer</strong>, which estimates the cost of several possible execution strategies and picks the cheapest one.
+      </p>
+
+      <p>
+      The optimizer uses statistics it collects about your data: roughly how many rows exist, how many distinct values a column has, and how data is distributed. If an <code>email</code> column has ten million distinct values, the index on it is extraordinarily selective because it will immediately narrow ten million rows down to one. If a <code>status</code> column has three possible values, like "active," "inactive," and "pending," an index on it is barely selective at all. A full scan might actually be faster, because at least the full scan reads pages sequentially rather than jumping around the disk following index pointers.
+      </p>
+
+      <p>
+      This is not a detail to memorize; it is a mindset to develop. Indexes on high-cardinality columns with many distinct values tend to be valuable. Indexes on low-cardinality columns often are not. The optimizer is trying to model this mathematically so you do not have to think about it on every query.
+      </p>
+
+      <hr />
+
+      <h2>Reading the Query Plan with EXPLAIN</h2>
+
+      <p>
+      You do not have to take the optimizer's word for it. Every major database lets you peek inside its decision-making with the <code>EXPLAIN</code> command:
+      </p>
+
+<pre><code>EXPLAIN
+SELECT *
+FROM users
+WHERE email = 'alice@gmail.com';</code></pre>
+
+      <p>
+      In PostgreSQL, this produces output like:
+      </p>
+
+<pre><code>Index Scan using idx_email on users
+  (cost=0.56..8.58 rows=1 width=204)
+  Index Cond: (email = 'alice@gmail.com')</code></pre>
+
+      <p>
+      Three things are worth reading here. The first is the <strong>scan type</strong>: "Index Scan" tells you it used the index. "Seq Scan" would mean a full table scan. "Index Only Scan" means it never even touched the main table. The second is <strong>cost</strong>: this is the optimizer's estimate in arbitrary units; lower is better, and the number after the <code>..</code> is the total cost. The third is <strong>rows</strong>: how many rows the optimizer expects to return. A big mismatch between this estimate and the reality often means your statistics are stale and need refreshing.
+      </p>
+
+      <p>
+      You do not need to understand every field yet. But getting into the habit of running <code>EXPLAIN</code> on slow queries is one of the most useful skills a backend developer can have. It turns database performance from guesswork into diagnosis.
+      </p>
+
+      <img src="../images/explain-output.png" alt="EXPLAIN Query Plan Output Screenshot" />
+      <p class="caption">Figure 4. EXPLAIN reveals whether the database chose an index scan or a sequential scan, and its estimated cost.</p>
+
+      <hr />
+
+      <h2>Indexes vs. Caching: Two Different Problems</h2>
+
+      <p>
+      At this point, a common confusion comes up: "If I just cache everything in memory, do I even need indexes?" The answer is that they solve completely different problems, and you almost always want both.
+      </p>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Indexes</th>
+            <th>Caching</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Help <em>locate</em> data</td>
+            <td>Store data for fast retrieval</td>
+          </tr>
+          <tr>
+            <td>Reduce search work</td>
+            <td>Reduce repeated work</td>
+          </tr>
+          <tr>
+            <td>Persistent, meaning they survive restarts</td>
+            <td>Temporary, meaning they are lost on restart</td>
+          </tr>
+          <tr>
+            <td>Usually disk-backed</td>
+            <td>Usually memory-backed</td>
+          </tr>
+          <tr>
+            <td>Speed up any query using that column</td>
+            <td>Speed up the exact same query repeated</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+      An index tells you <em>where</em> data is. A cache keeps frequently accessed data <em>nearby</em>. If you cached the result of a slow query, you have avoided the database entirely for that specific question. But the next slightly different question, like the same email with a different capitalization or a new user who was never cached, goes straight back to the database, which still has to run an expensive scan if the index does not exist.
+      </p>
+
+      <blockquote>
+      Think of an index as the book's index, and a cache as a sticky note on your desk with an answer you looked up recently. The sticky note is faster, but it only works for that exact question. The book's index works for any question, every time.
+      </blockquote>
+
+      <hr />
+
+      <h2>Application-Level Caching</h2>
+
+      <p>
+      Databases have their own internal caches (PostgreSQL calls its shared_buffers, and MySQL has the InnoDB buffer pool), but the caching idea does not stop there. Most production applications add another caching layer between the application and the database entirely.
+      </p>
+
+      <p>
+      The pattern looks like this. Without a cache, every user request drills straight through to the database:
+      </p>
+
+<pre><code>User
+ ↓
+Application
+ ↓
+Database</code></pre>
+
+      <p>
+      With a cache layer sitting between them:
+      </p>
+
+<pre><code>User
+ ↓
+Application
+ ↓
+Cache  ──── hit ────→  return immediately
+ ↓ miss
+Database
+ ↓
+store in cache, return</code></pre>
+
+      <p>
+      On a cache hit, the database never wakes up. On a cache miss, you pay the full database cost but then store the result so subsequent requests for the same data are free. This matters enormously for read-heavy workloads where the same data is requested constantly: a product page that a thousand users load per minute, a leaderboard that refreshes every few seconds, or a user profile that every API call needs to verify.
+      </p>
+
+      <hr />
+
+      <h2>Redis: The Most Popular Cache</h2>
+
+      <p>
+      <strong>Redis</strong> is, by a wide margin, the most common tool for this job. It is an in-memory data store: everything lives in RAM, reads happen in microseconds, and it can handle hundreds of thousands of operations per second on modest hardware. Redis is not a database replacement; it is a purpose-built, blazingly fast short-term memory for your application.
+      </p>
+
+      <p>
+      A typical cache interaction in code is almost comically simple:
+      </p>
+
+<pre><code># Check cache first
+user = redis.get("user:42")
+
+if user is None:
+    # Cache miss — go to database
+    user = db.query("SELECT * FROM users WHERE id = 42")
+    # Store for next time, expire after 5 minutes
+    redis.setex("user:42", 300, serialize(user))
+
+return user</code></pre>
+
+      <p>
+      Beyond simple key-value caching, Redis has native data types that make it useful for a surprisingly wide range of problems: sorted sets for leaderboards (Redis can rank a million scores and return the top ten in one operation), lists for message queues, counters for rate limiting, and sets for tracking unique visitors. It also has expiration built in. You set a TTL (time-to-live) on each key, and Redis automatically evicts it when the time is up, keeping your cache from growing stale forever.
+      </p>
+
+      <img src="../images/redis-architecture.png" alt="Redis Cache Layer Architecture Diagram" />
+      <p class="caption">Figure 5. Redis sits between the application and the database, absorbing repeated reads before they reach disk.</p>
+
+      <hr />
+
+      <h2>The End-to-End Journey</h2>
+
+      <p>
+      Let's walk through the full lifecycle of that login query one more time, now that we have all the pieces:
+      </p>
+
+      <div class="flow-block">
+        <div class="flow-step"><span class="flow-num">1.</span><span class="flow-label">Query arrives at the database:</span></div>
+        <div class="flow-note"><code>SELECT * FROM users WHERE email = 'alice@gmail.com'</code></div>
+        <div class="flow-step"><span class="flow-num">2.</span><span class="flow-label">Query optimizer evaluates available indexes</span></div>
+        <div class="flow-note">Finds <code>idx_email</code> and estimates cost of index scan vs. sequential scan</div>
+        <div class="flow-step"><span class="flow-num">3.</span><span class="flow-label">Query plan selected: Index Scan</span></div>
+        <div class="flow-note">Optimizer chooses the index because <code>email</code> is high-cardinality</div>
+        <div class="flow-step"><span class="flow-num">4.</span><span class="flow-label">B-Tree traversal begins</span></div>
+        <div class="flow-note">Root page → internal nodes → leaf node: 3 or 4 page reads total</div>
+        <div class="flow-step"><span class="flow-num">5.</span><span class="flow-label">Row located and returned to application</span></div>
+        <div class="flow-step"><span class="flow-num">6.</span><span class="flow-label">Application checks Redis cache</span></div>
+        <div class="flow-note"><code>redis.get("user:42")</code></div>
+        <div class="flow-step"><span class="flow-num">7.</span><span class="flow-label">Cache miss this time, which means the database was queried</span></div>
+        <div class="flow-step"><span class="flow-num">8.</span><span class="flow-label">Result returned to the user</span></div>
+        <div class="flow-step"><span class="flow-num">9.</span><span class="flow-label">Result stored in Redis with a TTL</span></div>
+        <div class="flow-note">Next login request for Alice hits the cache, and the database is never involved</div>
+      </div>
+
+      <p>
+      The entire thing, including index traversal, row fetch, and cache write, takes a few milliseconds end to end. The same query without the index would have taken seconds. Without the cache layer, the database would feel that full cost on every single login across every user simultaneously.
+      </p>
+
+      <img src="../images/end-to-end-query.png" alt="End-to-End Query Journey Diagram" />
+      <p class="caption">Figure 6. The full query journey: optimizer selects a plan, B-Tree traversal locates the row, and the result is cached for future requests.</p>
+
+      <hr />
+
+      <h2>Key Takeaways</h2>
+
+      <ul>
+        <li>Full table scans read every row; performance degrades linearly with table size. They do not scale.</li>
+        <li>Databases optimize for minimizing disk page reads, not row reads.</li>
+        <li>An index is a separate sorted data structure that maps column values to row locations, eliminating scans.</li>
+        <li>B-Trees power most relational database indexes because their high branching factor keeps trees shallow and limits page reads to a handful per lookup.</li>
+        <li>Clustered indexes store data in the tree itself; secondary indexes store pointers and require a second lookup.</li>
+        <li><code>EXPLAIN</code> reveals whether a query uses an index or a full scan and estimates its cost.</li>
+        <li>Indexes and caches solve different problems: indexes find data efficiently; caches avoid repeated database trips entirely.</li>
+        <li>Redis accelerates read-heavy workloads by keeping frequently accessed results in memory, milliseconds away.</li>
+      </ul>
+
+      <p>
+      Putting this alongside our previous blog, a clean progression emerges:
+      </p>
+
+<pre><code>File Systems
+    ↓
+Data is stored and organized on disk
+
+Database Indexes
+    ↓
+Specific data is found without scanning everything
+
+Caching (Redis)
+    ↓
+Repeated access becomes essentially free
+
+Query Optimization  ← next time
+    ↓
+Entire queries become efficient at scale</code></pre>
+
+<p>
+    We have covered how the database finds a single known record. But real applications are rarely that simple. A real-world request looks more like: "Find all orders placed in the last 30 days, grouped by customer, sorted by total amount."
+    </p>
+
+    <p>
+    When queries involve joining multiple tables, filtering by ranges, and aggregating data all at once, a single B-Tree index isn't enough. The database can't just jump to a single page; it has to orchestrate a complex dance of sorting, filtering, and merging data streams in memory. 
+    </p>
+
+    <p>
+    How it decides to execute those complex maneuvers without choking your CPU is exactly what we will unpack next time when we dive deep into <strong>Query Optimizers</strong>. We will look at how the database translates your declarative SQL into an actual physical execution plan, calculates the mathematical cost of different strategies, and chooses the fastest path to your data.
+    </p>
+    </article>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">&copy; 2026 Bhanu Sohan Pingali</span>
+    <div class="footer-links">
+      <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://linkedin.com/in/bspingali" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const themeBtn = document.getElementById('themeBtn');
+  themeBtn.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    themeBtn.innerHTML = newTheme === 'dark' ? '&#9788; light' : '&#9789; dark';
+  });
+  // set button text on load
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  themeBtn.innerHTML = savedTheme === 'dark' ? '&#9788; light' : '&#9789; dark';
+</script>
+
+</body>
+</html>
