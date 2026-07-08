@@ -1,0 +1,606 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>A Deep Dive into the Query Optimizer</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <script>
+    (function() {
+      var t = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <style>
+    :root {
+      --bg:        #f7f5f2;
+      --surface:   #efecea;
+      --border:    #d8d4ce;
+      --text:      #1a1916;
+      --muted:     #7a766e;
+      --accent:    #2a4a7f;
+      --accent-lt: #dce6f5;
+      --tag-bg:    #e8e4df;
+      --tag-text:  #4a453e;
+      --link:      #2a4a7f;
+      --mono:      'DM Mono', monospace;
+      --serif:     'EB Garamond', Georgia, serif;
+      --radius:    4px;
+      --max:       680px;
+      --trans:     0.2s ease;
+    }
+    [data-theme="dark"] {
+      --bg:        #131210;
+      --surface:   #1d1b18;
+      --border:    #2e2b26;
+      --text:      #e8e4dc;
+      --muted:     #7a766e;
+      --accent:    #7aa2d4;
+      --accent-lt: #1a2536;
+      --tag-bg:    #242118;
+      --tag-text:  #b0aa9e;
+      --link:      #7aa2d4;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.7;
+      background: var(--bg);
+      color: var(--text);
+      transition: background var(--trans), color var(--trans);
+    }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      transition: background var(--trans);
+    }
+    .nav-inner {
+      max-width: var(--max); margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between; height: 52px;
+    }
+    .nav-logo { font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; color: var(--text); }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a {
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+      color: var(--muted); text-transform: uppercase; transition: color var(--trans);
+    }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .theme-btn {
+      background: none; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 4px 10px; cursor: pointer; font-family: var(--mono); font-size: 11px;
+      color: var(--muted); letter-spacing: 0.04em;
+      transition: border-color var(--trans), color var(--trans);
+    }
+    .theme-btn:hover { color: var(--text); border-color: var(--muted); }
+
+    .site-wrapper { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+
+    .post-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted);
+      padding: 60px 0 0; margin-bottom: 0;
+      border: none; background: none; cursor: pointer;
+    }
+    .post-back:hover { color: var(--accent); text-decoration: none; }
+
+    .post-header { padding: 28px 0 40px; border-bottom: 1px solid var(--border); }
+    .post-eyebrow {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+    }
+    .post-title {
+      font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 400;
+      line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 20px;
+    }
+    .post-title em { font-style: italic; color: var(--accent); }
+    .post-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+    .post-meta-item { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+    .post-body { padding: 48px 0 80px; font-size: 1.05rem; line-height: 1.85; }
+    .post-body h2 { font-size: 1.5rem; margin: 40px 0 16px; font-weight: 400; }
+    .post-body h3 { font-size: 1.2rem; margin: 32px 0 12px; font-weight: 500; }
+    .post-body p  { margin-bottom: 20px; }
+    .post-body ul, .post-body ol { padding-left: 24px; margin-bottom: 20px; }
+    .post-body li { margin-bottom: 8px; }
+    .post-body a  { color: var(--accent); }
+    .post-body code {
+      font-family: var(--mono); font-size: 0.85em;
+      background: var(--surface); padding: 2px 6px; border-radius: 2px;
+    }
+    .post-body pre {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; overflow-x: auto; margin-bottom: 24px;
+    }
+    .post-body pre code { background: none; padding: 0; font-size: 0.9em; }
+    .post-body blockquote {
+      border-left: 3px solid var(--accent); padding-left: 20px;
+      color: var(--muted); font-style: italic; margin: 24px 0;
+    }
+    .post-body img {
+      width: 100%; margin: 28px 0; border-radius: var(--radius);
+      border: 1px solid var(--border); display: block;
+    }
+    .post-body .caption {
+      font-family: var(--mono); font-size: 11px; color: var(--muted);
+      text-align: center; margin-top: -20px; margin-bottom: 28px;
+    }
+
+    /* Comparison table */
+    .compare-table {
+      width: 100%; border-collapse: collapse; margin: 24px 0 28px;
+      font-family: var(--mono); font-size: 0.82em;
+    }
+    .compare-table th {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 10px 14px; text-align: left; font-weight: 400;
+      letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.78em; color: var(--muted);
+    }
+    .compare-table td {
+      border: 1px solid var(--border); padding: 10px 14px; color: var(--text);
+      vertical-align: top;
+    }
+    .compare-table tr:nth-child(even) td { background: var(--surface); }
+
+    /* Flow diagram blocks */
+    .flow-block {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 24px; margin: 24px 0;
+      font-family: var(--mono); font-size: 0.88em; line-height: 2;
+    }
+    .flow-block .flow-step {
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .flow-block .flow-num {
+      color: var(--muted); min-width: 20px; padding-top: 1px;
+    }
+    .flow-block .flow-arrow {
+      color: var(--muted); text-align: center; padding-left: 8px;
+      font-size: 0.9em;
+    }
+    .flow-block .flow-label { color: var(--text); }
+    .flow-block .flow-note { color: var(--muted); font-size: 0.85em; padding-left: 32px; }
+
+    /* Series nav */
+    .series-nav {
+      margin: 40px 0 0;
+      padding: 20px 24px;
+      background: var(--accent-lt);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .series-nav p {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 8px !important;
+    }
+    .series-nav a {
+      font-size: 0.95rem; font-family: var(--serif); color: var(--accent);
+    }
+
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner {
+      max-width: var(--max); margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-copy { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .footer-links a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="../index.html">Bhanu Sohan Pingali</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../index.html?page=blog">Blog</a>
+      <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener">GitHub &#8599;</a>
+      <a href="https://linkedin.com/in/bspingali" target="_blank" rel="noopener">LinkedIn &#8599;</a>
+      <button class="theme-btn" id="themeBtn">&#9789; dark</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="site-wrapper">
+
+    <a class="post-back" href="../index.html?page=blog">← Back to blog</a>
+
+    <header class="post-header">
+      <p class="post-eyebrow">Blog &middot; July 8, 2026</p>
+      <h1 class="post-title">A Deep Dive into the <em>Query Optimizer</em></h1>
+      <div class="post-meta">
+        <span class="post-meta-item">Bhanu Sohan Pingali</span>
+        <span class="post-meta-item">Part 2: Query Processing</span>
+        <span class="post-meta-item">14 min read</span>
+      </div>
+    </header>
+
+    <article class="post-body">
+
+      <p>
+      In the last blog, we watched a database perform what feels like magic: finding a single row among ten million in a handful of milliseconds. The secret was the index, a separate sorted structure that maps column values to row identifiers or, in some storage engines, directly to the rows themselves. By the end, we had a complete picture of how a single known record gets retrieved efficiently.
+      </p>
+
+      <p>
+      But here is the problem. Nobody writes queries like that.
+      </p>
+
+      <p>
+      Real applications do not ask "give me the row where id = 42." They ask things like: <em>"Find all orders placed in the last 30 days by customers in California, group them by customer, sum the totals, and sort by descending amount."</em> That query touches three tables, filters by a date range and a geography, performs an aggregation, and sorts the result. A single index usually is not enough to solve queries like this on its own. The database still has to decide join orderings, aggregations, and execution strategies.
+      </p>
+
+      <p>
+      This problem of translating a request into a strategy is what the query optimizer was built to solve. It is, arguably, the most intellectually interesting piece of software in the entire database stack. Today we pull it apart.
+      </p>
+
+      <hr />
+
+      <h2>SQL Is Declarative. The Database Figures Out the Rest.</h2>
+
+      <p>
+      When you write a SQL query, you are not writing instructions. You are writing a <em>description</em>. You describe the shape of the data you want (which tables, which conditions, which columns) and hand it to the database. The database then decides, entirely on its own, how to actually retrieve it.
+      </p>
+
+      <p>
+      This is called being <em>declarative</em>, and it is SQL's great strength and its great source of complexity. The same SELECT statement can be physically executed in dozens of different orderings. The database might start by joining two large tables together and then filtering the result, or it might filter each table down first and then join the much smaller intermediate results. The answer is identical either way. The cost is not even close.
+      </p>
+
+      <p>
+      Consider a query that joins <code>orders</code> and <code>customers</code> and filters for California customers with orders over $500. If there are five million orders and only ten thousand California customers, filtering customers first reduces the join to a trivial operation. Joining first and filtering after means the database wrestles with five million rows before discarding most of them. The right order can be hundreds of times faster.
+      </p>
+
+      <blockquote>
+      The optimizer's job is to find the right order, and to do it in milliseconds, before the query even begins executing.
+      </blockquote>
+
+      <img src="../images/declarative-sql-strategies.png" alt="Two execution strategies for the same SQL query: filter-then-join vs join-then-filter" />
+      <p class="caption">Figure 1. The same SQL query executed two ways: filtering before the join leaves a fraction of the rows; filtering after means processing the full product of both tables.</p>
+
+      <hr />
+
+      <h2>Before the Optimizer Even Wakes Up: Parsing → Binding → Logical Plan</h2>
+
+      <p>
+      Before the optimizer touches your query, three other stages have already run. They are fast and mostly invisible, but they produce the input the optimizer needs.
+      </p>
+
+      <p>
+      <strong>Parsing</strong> is where the database reads your raw SQL text and checks that it is valid. It verifies syntax (parentheses match, keywords are in the right place, the statement is grammatically correct) and converts the text into an Abstract Syntax Tree (AST). The AST is a structured representation of the query's logic: a tree of nodes representing operations, conditions, and expressions.
+      </p>
+
+      <p>
+      <strong>Binding</strong> (sometimes called algebrization) is where the database cross-references the AST against its own catalog. It asks: do these tables actually exist? Do the columns referenced belong to those tables? Does this user have permission to read them? Data types are resolved, ambiguous column names are qualified, and any errors here produce the familiar messages like "column does not exist" or "permission denied." The output is a <em>Logical Query Tree</em>, which has the same structure as the AST but is now fully anchored to real objects in the database.
+      </p>
+
+      <p>
+      <strong>Optimization</strong> is where the logical plan gets handed to the optimizer to be transformed into a physical execution plan. This is the step we spend the rest of this blog on.
+      </p>
+
+<pre><code>Raw SQL Text
+    ↓
+Parsing → Abstract Syntax Tree (AST)
+    ↓
+Binding → Logical Query Tree
+    ↓
+Optimization → Physical Execution Plan
+    ↓
+Execution → Results</code></pre>
+
+      <p>
+      The distinction between logical and physical matters. A logical plan says "join these two tables." A physical plan says "join these two tables <em>using a hash join, after filtering orders down to those placed in the last 30 days, reading customers via an index seek on the state column.</em>" The logical plan describes <em>what</em>. The physical plan describes <em>how</em>.
+      </p>
+
+      <img src="../images/query-pipeline-stages.png" alt="Query pipeline diagram showing the four stages from raw SQL to execution results" />
+      <p class="caption">Figure 2. The four-stage pipeline every SQL query passes through before a single row is read from disk.</p>
+
+      <hr />
+
+      <h2>Phase 1: Logical Transformations: Cleaning Up Before Committing</h2>
+
+      <p>
+      The optimizer's first move is not to evaluate costs. It is to simplify. Before any statistics are consulted or execution strategies considered, the optimizer applies a set of rule-based rewrites to the logical query tree. These transformations are always beneficial, so they are applied unconditionally.
+      </p>
+
+      <p>
+      <strong>Predicate Pushdown</strong> is the most impactful of these. A predicate is any filter condition: a WHERE clause, a JOIN condition, or a HAVING filter. Predicate pushdown moves these filters as early in the execution as possible, as deep down the query tree as they can go. The intuition is simple: the sooner you discard rows you do not need, the less work every subsequent operation has to do.
+      </p>
+
+      <p>
+      If you are joining <code>orders</code> and <code>customers</code> and filtering for <code>customers.state = 'CA'</code>, the optimizer pushes that filter to run against <code>customers</code> before the join. Instead of joining five million orders against five million customer records and then filtering, you join five million orders against ten thousand California customers. Every stage downstream gets smaller input.
+      </p>
+
+      <img src="../images/predicate-pushdown.png" alt="Predicate pushdown diagram showing a filter being moved earlier in the query tree" />
+      <p class="caption">Figure 3. Predicate pushdown moves filter conditions as deep into the query tree as possible, shrinking intermediate results before expensive operations like joins.</p>
+
+      <p>
+        <strong>Constant Folding</strong> handles expressions that can be evaluated at planning time. If your query contains <code>WHERE price > (10 * 5)</code>, the optimizer evaluates the expression during planning and substitutes the literal value. The expression is not re-evaluated for every row during execution.
+        </p>
+
+        <p>
+          <strong>Contradiction Detection</strong> is a small but elegant optimization. If a query contains a logically impossible condition like <code>WHERE status = 'active' AND status = 'deleted'</code> or the classic <code>WHERE 1 = 2</code>, the optimizer detects the contradiction immediately and generates a trivial plan that returns an empty result without accessing the table.
+          </p>
+
+      <p>
+      <strong>View Expansion and Flattening</strong> handles subqueries and views. When possible, the optimizer rewrites them into equivalent join expressions in the main query block. This allows the optimizer to see the full picture when it begins exploring join orderings, rather than treating subqueries as opaque black boxes.
+      </p>
+
+      <p>
+      These rewrites happen before any cost calculation. They are free improvements, the optimizer's way of making sure it is working on the simplest possible version of the problem before doing the expensive work.
+      </p>
+
+      <hr />
+
+      <h2>Phase 2: Cardinality Estimation and the Optimizer's Crystal Ball</h2>
+
+      <p>
+      After simplification, the optimizer faces its hardest problem: predicting the future.
+      </p>
+
+      <p>
+      Every decision the optimizer makes downstream (which join algorithm to use, which index to seek, which table to read first) depends on knowing roughly how many rows each step will produce. The number of rows flowing out of an operation is called its <em>cardinality</em>, and estimating it accurately is the single most important thing the optimizer does. Get it right, and the plan is fast. Get it wrong, and the optimizer confidently builds an elaborate strategy for entirely the wrong problem.
+      </p>
+
+      <p>
+      The optimizer does not read your data to produce these estimates. It reads <em>statistics about your data</em>: compact summaries the database collects and stores separately.
+      </p>
+
+      <p>
+        <strong>Histograms</strong> divide a column's value range into buckets and track how many rows fall into each. A histogram on an <code>order_total</code> column might tell the optimizer that 60% of orders are between $0–$100, 30% are between $100–$500, and only 10% exceed $500. When a query filters for orders over $500, the optimizer consults histogram statistics and estimates that the predicate will match roughly 10% of the table's rows.
+        </p>
+
+      <img src="../images/histogram-cardinality.png" alt="Histogram diagram showing value distribution across buckets for an order_total column" />
+      <p class="caption">Figure 4. A histogram on <code>order_total</code> tells the optimizer how rows are distributed across value ranges, enabling accurate cardinality estimates for filter conditions.</p>
+      <hr />
+
+      <h2>Phase 3: The Search Space and Why This Is Hard</h2>
+
+      <p>
+      With cardinality estimates in hand, the optimizer begins exploring possible execution plans. And this is where the problem becomes genuinely hard.
+      </p>
+
+      <p>
+      For a query that joins two tables, there are a small number of possible orderings. For three tables, the number is larger but manageable. For five tables, there are 120 possible join orderings. For ten tables, there are over three million. For fifteen tables, the number exceeds a trillion. This is the combinatorial explosion at the heart of query optimization, and it is why the optimizer cannot simply try everything.
+      </p>
+
+      <img src="../images/join-ordering-explosion.png" alt="Chart showing how join orderings grow factorially with each additional table" />
+      <p class="caption">Figure 5. Join orderings grow as N-factorial. At ten tables the search space already exceeds three million; exhaustive enumeration becomes impossible.</p>
+
+      <p>
+      Modern database engines use a search framework called the <strong>Volcano/Cascades model</strong> to navigate this space. Rather than enumerating plans one by one, it works with <em>equivalence groups</em>, which are sets of logical operations that produce the same result through different physical strategies. The optimizer explores transformations within and between these groups, progressively refining candidates.
+      </p>
+
+      <p>
+      The memory structure that makes this tractable is called the <strong>Memo</strong>. The Memo stores equivalent execution subtrees compactly, without physically duplicating the operator trees they represent. When the optimizer discovers that two different join orderings produce equivalent intermediate results, it records both in the same Memo group. This means the optimizer can reason about an enormous number of plan variants without actually materializing each one in memory.
+      </p>
+      <p>
+        Even with the Memo, truly exhaustive search is impossible at scale. Because exhaustive search becomes prohibitively expensive, optimizers rely on heuristics, pruning strategies, and search limits that eventually stop exploring additional plans and execute the best candidate found so far.
+        </p>
+
+        <pre><code>Query with N tables
+          ↓
+      N! possible join orderings
+          ↓
+      Volcano/Cascades search framework
+          ↓
+      Memo structure (compact equivalence groups)
+          ↓
+      Heuristics, pruning, and search limits
+          ↓
+      Best candidate execution plan</code></pre>
+
+      <hr />
+
+      <h2>Choosing Physical Operators: Where Strategy Meets Reality</h2>
+
+      <p>
+      The Cascades search explores logical transformations. But at some point, the optimizer has to commit to <em>physical</em> operations: actual algorithms that will run on actual hardware. Logical "scan this table" becomes one of three concrete access strategies. Logical "join these tables" becomes one of three concrete join algorithms.
+      </p>
+
+      <p>
+      <strong>Access Methods</strong> are how the optimizer reads rows from a table:
+      </p>
+
+      <ul>
+        <li>A <strong>Clustered Index Scan</strong> reads the table in primary key order, which is efficient when you need a large contiguous range of rows.</li>
+        <li>An <strong>Index Seek</strong> jumps directly to a specific location in an index, the fast path for highly selective filters on indexed columns.</li>
+        <li>A <strong>Table Scan</strong> reads every page in the table sequentially, which is expensive for large tables, but occasionally faster than an index seek when the filter is so non-selective that you would end up reading most of the table anyway, since sequential reads are significantly faster than the random I/O that index traversal requires.</li>
+      </ul>
+      <p>
+        Different database engines use different names for these access methods, but the underlying ideas are broadly similar.
+        </p>
+
+      <p>
+      <strong>Join Algorithms</strong> are where the cardinality estimates from Phase 2 do their most visible work:
+      </p>
+
+      <p>
+        <strong>Nested Loop Join</strong> works by iterating over every row in the outer table and, for each one, looking up matching rows in the inner table. It is fast when the inner table is small or has a useful index, and the outer table's filtered result is small. Without a useful index, cost can approach the product of the two input sizes.
+        </p>
+
+      <p>
+      <strong>Merge Join</strong> works by sorting both inputs on the join key and then walking through them simultaneously, like a zipper. When a match is found, it is emitted; when one side advances past the other, both sides step forward. Merge join is extremely fast when both inputs are already sorted, for example when both sides are being read via an index that orders them on the join column. If sorting is required first, that cost has to be weighed against the savings from the merge itself.
+      </p>
+
+      <p>
+      <strong>Hash Join</strong> works by reading the smaller input and building a hash table in memory, keyed on the join column. It then streams the larger input through, probing the hash table for matches. Hash join is the workhorse for large, unsorted datasets; it requires no pre-sorted input and handles joins between large tables efficiently, as long as the hash table fits in memory. When it does not, the database spills to disk, which is expensive.
+      </p>
+
+      <img src="../images/join-algorithms.png" alt="Side-by-side comparison of nested loop, merge, and hash join algorithms" />
+      <p class="caption">Figure 6. The three physical join algorithms: nested loop iterates every outer row against the inner; merge zip-walks two sorted streams; hash builds an in-memory lookup table from the smaller side.</p>
+
+      <p>
+      The optimizer chooses among these based entirely on the cardinality estimates it produced in Phase 2. If it thinks the filtered result of one table is small, it might choose a nested loop. If it thinks both sides are large and unsorted, it reaches for a hash join. This is exactly why stale statistics cause bad plans: the optimizer picks a nested loop expecting a small inner table, discovers it is actually enormous at runtime, and grinds through the query in time that is orders of magnitude worse than a hash join would have taken.
+      </p>
+
+      <hr />
+
+      <h2>Plan Caching: The Optimizer's Shortcut</h2>
+
+      <p>
+      Building a plan is not free. The cardinality estimation, Cascades search, and physical operator selection described above require CPU time: not much for simple queries, but non-trivial for complex ones involving many tables. On a busy database handling thousands of queries per second, re-running the optimizer on every request would become a meaningful cost.
+      </p>
+
+      <p>
+      The solution is the <strong>Plan Cache</strong>. Once the optimizer selects a physical execution plan, that plan is compiled and stored. When the exact same query text arrives again, the database checks the plan cache first. On a hit, it bypasses the optimizer entirely and executes the cached plan directly.
+      </p>
+
+      <p>
+      This is a significant win for applications that run the same queries repeatedly, which is most applications. A user profile fetch, a product page load, an authentication check: these queries execute millions of times a day with different parameter values but identical structure. The plan cache means the optimizer earns its cost once and amortizes it across every subsequent execution.
+      </p>
+      <hr />
+
+      <h2>EXPLAIN ANALYZE: Catching the Optimizer Being Wrong</h2>
+
+      <p>
+      In the last blog, we introduced <code>EXPLAIN</code> as a way to see what plan the optimizer chose. <code>EXPLAIN ANALYZE</code> goes further: it actually runs the query and shows you what happened, side by side with what the optimizer predicted.
+      </p>
+
+<pre><code>EXPLAIN ANALYZE
+SELECT c.name, SUM(o.total) as revenue
+FROM orders o
+JOIN customers c ON o.customer_id = c.id
+WHERE o.created_at > NOW() - INTERVAL '30 days'
+  AND c.state = 'CA'
+GROUP BY c.name
+ORDER BY revenue DESC;</code></pre>
+
+      <p>
+      The output in PostgreSQL looks something like this:
+      </p>
+
+<pre><code>Sort  (cost=12845.23..12847.73 rows=1000 width=40)
+      (actual time=183.412..183.491 rows=847 loops=1)
+  ->  HashAggregate  (cost=12789.00..12799.00 rows=1000 width=40)
+                     (actual time=183.201..183.312 rows=847 loops=1)
+      ->  Hash Join  (cost=3241.00..12651.00 rows=27600 width=36)
+                     (actual time=28.341..176.203 rows=24891 loops=1)
+            Hash Cond: (o.customer_id = c.id)
+            ->  Seq Scan on orders
+                  Filter: (created_at > (now() - '30 days'::interval))
+                  Rows Removed by Filter: 412847
+            ->  Hash  (cost=2890.00..2890.00 rows=28080 width=24)
+                      (actual time=27.203..27.203 rows=10423 loops=1)
+                  ->  Index Scan using idx_customers_state on customers
+                        Index Cond: (state = 'CA')</code></pre>
+
+      <p>
+      Three things to read in every <code>EXPLAIN ANALYZE</code> output:
+      </p>
+
+      <p>
+      <strong>The scan type</strong> tells you how the database accessed each table. "Index Scan" means it used an index. "Seq Scan" means it read the whole table. "Index Only Scan" means it never touched the main table at all, because everything it needed was in the index leaf. Unexpected Seq Scans on large tables are the first thing to look for.
+      </p>
+
+      <p>
+      <strong>The cost estimates versus actual times</strong> tell you how well the optimizer's model matched reality. The <code>cost=</code> numbers are the optimizer's pre-execution predictions in internal units. The <code>actual time=</code> numbers are real wall-clock milliseconds. Large gaps here are diagnostic signals. If the optimizer estimated 100 rows and got 100,000, its cardinality estimate was wrong, which usually means statistics are stale.
+      </p>
+
+      <p>
+      <strong>Rows removed by filter</strong> tells you how selective your filters actually were. If a sequential scan removed 412,000 rows to produce 24,000, that is an 18:1 discard ratio, a strong signal that an index on that filter column might be worth adding.
+      </p>
+
+      <img src="../images/explain-analyze-output.png" alt="Annotated EXPLAIN ANALYZE output highlighting scan type, cost estimates vs actual times, and rows removed" />
+      <p class="caption">Figure 7. An annotated EXPLAIN ANALYZE output: scan types reveal index usage, cost vs. actual gaps reveal stale statistics, and rows-removed ratios flag missing indexes.</p>
+
+      <blockquote>
+      EXPLAIN ANALYZE does not just reveal what the optimizer decided. It reveals where the optimizer's model of your data diverged from reality. That divergence is almost always where slow queries are hiding.
+      </blockquote>
+
+      <hr />
+
+      <h2>Key Takeaways</h2>
+
+      <ul>
+        <li><strong>SQL is declarative:</strong> you describe what you want, and the optimizer decides how to retrieve it. The same query can be executed in many orderings with wildly different costs.</li>
+        <li><strong>The pipeline has three pre-optimization stages:</strong> parsing converts SQL to an AST, binding anchors it to real catalog objects, and the logical plan is handed to the optimizer.</li>
+        <li><strong>Logical transformations are free wins:</strong> predicate pushdown, constant folding, contradiction detection, and view flattening happen before cost estimation and are always applied.</li>
+        <li><strong>Cardinality estimation drives everything:</strong> the optimizer's choice of join algorithm, access method, and join ordering all depend on how many rows it expects each operation to produce. Stale statistics are the most common root cause of plan regressions.</li>
+        <li><strong>The search space is exponential:</strong> N tables means N! join orderings. The Volcano/Cascades framework with a Memo structure makes this tractable. Modern optimizers rely on heuristics, pruning strategies, and search limits to avoid exhaustive enumeration.</li>
+        <li><strong>Physical operators are chosen based on estimates:</strong> nested loops for small inputs with index access, merge joins for pre-sorted data, hash joins for large unsorted datasets. The wrong estimate means the wrong algorithm.</li>
+        <li><strong>Plan caching amortizes optimizer cost:</strong> repeated queries reuse cached plans.</li>
+        <li><strong>EXPLAIN ANALYZE is the diagnostic tool:</strong> compare estimated rows to actual rows. Gaps reveal where the optimizer's model broke down, which is almost always where the performance problem lives.</li>
+      </ul>
+
+      <p>
+      Putting this alongside the progression from our previous blog:
+      </p>
+
+<pre><code>File Systems
+    ↓
+Data is stored and organized on disk
+
+Database Indexes
+    ↓
+Specific data is found without scanning everything
+
+Caching (Redis)
+    ↓
+Repeated access becomes essentially free
+
+Query Optimization      ← you are here
+    ↓
+Complex queries are executed efficiently at scale
+
+Distributed Databases   ← next
+    ↓
+What happens when one machine is no longer enough</code></pre>
+
+      <p>
+      We have now followed a query from the moment it is typed to the moment a physical plan runs. The optimizer makes all of this look automatic, and on a single, well-configured machine, it mostly is.
+      </p>
+
+      <p>
+      But every system we have discussed so far makes a quiet assumption: one machine, one disk, one shared memory space. In practice, the most demanding applications push past what any single node can handle. When your data grows beyond what fits on one server, or when your write rate exceeds what one machine can sustain, you need a fundamentally different architecture, one where the ideas from indexing and query optimization do not disappear but fracture across dozens or hundreds of machines and become dramatically harder to reason about.
+      </p>
+
+      <p>
+      That is exactly where we go next.
+      </p>
+
+      <div class="series-nav">
+        <p>Series &middot; How Databases Actually Work</p>
+        <a href="databases-part-1.html">← Part 1: How Databases Find Your Data in Milliseconds</a>
+      </div>
+
+    </article>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">&copy; 2026 Bhanu Sohan Pingali</span>
+    <div class="footer-links">
+      <a href="https://github.com/P-Bhanu-Sohan" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://linkedin.com/in/bspingali" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const themeBtn = document.getElementById('themeBtn');
+  themeBtn.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    themeBtn.innerHTML = newTheme === 'dark' ? '&#9788; light' : '&#9789; dark';
+  });
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  themeBtn.innerHTML = savedTheme === 'dark' ? '&#9788; light' : '&#9789; dark';
+</script>
+
+</body>
+</html>
